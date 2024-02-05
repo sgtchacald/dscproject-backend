@@ -1,0 +1,23 @@
+#configurações JPA
+spring:
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        dialect.storage_engine: innodb
+        format_sql: true
+        ddl-auto: create-drop
+    generate-ddl: true
+    show-sql: false
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://89.117.7.52:3306/u832875625_dsc_dev_bd
+    username: u832875625_dsc_dev
+    password: Dscproject@00001
+
+logging:
+  level:
+    org:
+      springframework:
+        web: DEBUG
+    hibernate: DEBUG
