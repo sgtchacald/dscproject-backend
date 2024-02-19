@@ -25,11 +25,11 @@ public class Usuario implements Serializable {
     @Column(name = "NOME", length = 100, nullable = false)
     private String nome;
 
-    @Column(name = "GENERO", length = 1, nullable = false)
+    @Column(name = "GENERO", length = 1, nullable = true)
     private String genero;
 
     @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
-    @Column(name = "DT_NASCIMENTO", nullable = false)
+    @Column(name = "DT_NASCIMENTO", nullable = true)
     private Date nascimento;
 
     @Column(name = "EMAIL", length = 512, nullable = false, unique = true)
@@ -38,7 +38,7 @@ public class Usuario implements Serializable {
     @Column(name = "LOGIN", length = 40, nullable = false, unique = true)
     private String login;
 
-    @Column(name = "SENHA", length = 60, nullable = false)
+    @Column(name = "SENHA", length = 25, nullable = false)
     private String senha;
 
 }
