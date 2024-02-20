@@ -2,6 +2,7 @@ package br.com.dscproject.services;
 
 import br.com.dscproject.model.Usuario;
 import br.com.dscproject.repository.UsuarioRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,11 +12,11 @@ import java.sql.Date;
 import java.util.Optional;
 
 @Service
+@Slf4j
 public class DBService {
 
    @Autowired
     private UsuarioRepository usuarioRepository;
-    private static final Logger log = LoggerFactory.getLogger(DBService.class);
 
     public void instanciarBancoDeDados(){
 

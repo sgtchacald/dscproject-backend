@@ -1,7 +1,6 @@
 package br.com.dscproject.enums;
 
 import lombok.*;
-
 @AllArgsConstructor
 public enum Genero {
 
@@ -19,17 +18,14 @@ public enum Genero {
 
     public static Genero toEnum(String codigo){
 
-        if(codigo == null) {
-            return null;
-        }
-
-        for(Genero x : Genero.values()) {
-            if(codigo.equals(x.getCodigo())) {
-                return x;
+        if(!codigo.isBlank())
+            for(Genero x : Genero.values()) {
+                if(codigo.equals(x.getCodigo())) {
+                    return x;
+                }
             }
-        }
 
-        throw new IllegalArgumentException("Código inválido" + codigo);
+        throw new IllegalArgumentException("Código: " + codigo + " inválido");
     }
 
 }

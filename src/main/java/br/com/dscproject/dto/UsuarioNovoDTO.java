@@ -1,11 +1,13 @@
 package br.com.dscproject.dto;
 
+import br.com.dscproject.validation.constraints.UsuarioNovo;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
 import org.hibernate.validator.constraints.Length;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
+@UsuarioNovo
 public class UsuarioNovoDTO {
 
     @NotEmpty(message="Preenchimento Obrigatório.")
@@ -24,4 +26,7 @@ public class UsuarioNovoDTO {
     @NotEmpty(message="Preenchimento Obrigatório")
     @Length(max=60, message="Este campo deve ter no máximo 60 caracteres.")
     private String senha;
+
+
+
 }
