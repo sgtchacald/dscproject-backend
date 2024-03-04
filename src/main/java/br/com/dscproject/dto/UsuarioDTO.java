@@ -1,53 +1,42 @@
 package br.com.dscproject.dto;
 
+import br.com.dscproject.enums.Perfis;
 import br.com.dscproject.model.Usuario;
-import com.fasterxml.jackson.annotation.JsonFormat;
+import br.com.dscproject.validation.constraints.UsuarioNovo;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
 import org.hibernate.validator.constraints.Length;
-import java.util.Date;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor
+@UsuarioNovo
 public class UsuarioDTO {
 
-    private Long id;
-
     @NotEmpty(message="Preenchimento Obrigatório.")
-    @Length(min=5, max=80, message="O tamanho deve ser entre 5 e 80 caracteres.")
+    @Length(max=100, message="Este campo deve ter no máximo 100 caracteres.")
     private String nome;
 
     @NotEmpty(message="Preenchimento Obrigatório.")
-    @Length(min=1, max=1, message="O tamanho deve ser 1 caracter.")
-    private String genero;
-
-    @NotEmpty(message="Preenchimento Obrigatório.")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss",timezone = "America/Sao_Paulo")
-    private Date nascimento;
-
-    @NotEmpty(message="Preenchimento obrigatório.")
-    @Email(message="Email inválido.")
+    @Length(max=512, message="Este campo deve ter no máximo 512 caracteres.")
+    @Email(message="Este campo deve ter um e-mail válido.")
     private String email;
 
-    @NotEmpty(message="Preenchimento Obrigatório.")
-    @Length(min=5, max=45, message="O tamanho deve ser entre 5 e 45 caracteres.")
+    @NotEmpty(message="Preenchimento Obrigatório")
+    @Length(min=4, max=40, message="Este campo deve ter no no mínimo 4 e no máximo 40 caracteres.")
     private String login;
 
-    @NotEmpty(message="Preenchimento Obrigatório.")
-    @Length(min=6, max=25, message="O tamanho deve ser entre 6 e 25 caracteres.")
+    @NotEmpty(message="Preenchimento Obrigatório")
+    @Length(max=60, message="Este campo deve ter no máximo 60 caracteres.")
     private String senha;
 
+    private Perfis perfil;
+
+
     public UsuarioDTO(Usuario usuario) {
-        this.id = usuario.getId();
         this.nome = usuario.getNome();
-        this.genero = usuario.getGenero();
-        this.nascimento = usuario.getNascimento();
         this.email = usuario.getEmail();
         this.login = usuario.getLogin();
         this.senha = usuario.getSenha();
+        this.perfil = usuario.getPerfil();
     }
-
 }

@@ -1,6 +1,6 @@
 package br.com.dscproject.validation;
 
-import br.com.dscproject.dto.UsuarioNovoDTO;
+import br.com.dscproject.dto.UsuarioDTO;
 import br.com.dscproject.repository.UsuarioRepository;
 import br.com.dscproject.controller.Exception.FieldMessage;
 import br.com.dscproject.validation.constraints.UsuarioNovo;
@@ -14,12 +14,12 @@ import jakarta.validation.ConstraintValidatorContext;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UsuarioValidation implements ConstraintValidator<UsuarioNovo, UsuarioNovoDTO> {
+public class UsuarioValidation implements ConstraintValidator<UsuarioNovo, UsuarioDTO> {
 
 	@Autowired
 	private UsuarioRepository usuarioRepository;
 
-    public boolean isValid(UsuarioNovoDTO usuarioDTO, ConstraintValidatorContext context) {
+    public boolean isValid(UsuarioDTO usuarioDTO, ConstraintValidatorContext context) {
 
 		List<FieldMessage> list = new ArrayList<>();
 
@@ -50,5 +50,5 @@ public class UsuarioValidation implements ConstraintValidator<UsuarioNovo, Usuar
 
 	}
 
-	
+
 }
