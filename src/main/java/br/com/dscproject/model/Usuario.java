@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Cascade;
 import org.springframework.boot.autoconfigure.task.TaskExecutionProperties;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -26,31 +27,35 @@ public class Usuario implements Serializable, UserDetails {
 
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
-    @Column(name = "ID", nullable = false)
+    @Column(name = "US_ID", nullable = false)
     private Long id;
 
-    @Column(name = "NOME", length = 100, nullable = false)
+    @Column(name = "US_NOME", length = 100, nullable = false)
     private String nome;
 
-    @Column(name = "GENERO", length = 1, nullable = true)
+    @Column(name = "US_GENERO", length = 1, nullable = true)
     private String genero;
 
     @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
-    @Column(name = "DT_NASCIMENTO", nullable = true)
+    @Column(name = "US_DT_NASCIMENTO", nullable = true)
     private Date nascimento;
 
-    @Column(name = "EMAIL", length = 512, nullable = false, unique = true)
+    @Column(name = "US_EMAIL", length = 512, nullable = false, unique = true)
     private String email;
 
-    @Column(name = "LOGIN", length = 40, nullable = false, unique = true)
+    @Column(name = "US_LOGIN", length = 40, nullable = false, unique = true)
     private String login;
 
-    @Column(name = "SENHA", length = 1024, nullable = false)
+    @Column(name = "US_SENHA", length = 1024, nullable = false)
     private String senha;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "PERFIL")
+    @Column(name = "US_PERFIL")
     private Perfis perfil;
+
+    @OneToMany(mappedBy="instituicaoFinanceira", fetch = FetchType.LAZY, cascade=CascadeType.ALL)
+    @Cascade(value = org.hibernate.annotations.CascadeType.ALL)
+    private List<InstituicaoFinanceiraUsuario> instituicoesFinanceirasUsuario;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

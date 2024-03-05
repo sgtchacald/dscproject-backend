@@ -1,6 +1,7 @@
 package br.com.dscproject.services;
 
 import br.com.dscproject.enums.Perfis;
+import br.com.dscproject.model.InstituicaoFinanceira;
 import br.com.dscproject.model.Usuario;
 import br.com.dscproject.repository.UsuarioRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +23,7 @@ public class DBService {
 
     public void instanciarBancoDeDados(){
 
-        usuarioRepository.save(new Usuario(null, "Diego dos Santos Cordeiro", "M", Date.valueOf("1986-07-12"),"sgt.chacal.d@gmail.com", "chacalsgt", new BCryptPasswordEncoder().encode("chacal@01"), Perfis.ADMIN));
+        /*usuarioRepository.save(new Usuario(null, "Diego dos Santos Cordeiro", "M", Date.valueOf("1986-07-12"),"sgt.chacal.d@gmail.com", "chacalsgt", new BCryptPasswordEncoder().encode("chacal@01"), Perfis.ADMIN));
         usuarioRepository.save(new Usuario(null, "Mara Cristiane", "F", Date.valueOf("1975-10-13"),"mcristianesilveira@gmail.com", "mcristianesilveira", new BCryptPasswordEncoder().encode("chacal@02"), Perfis.USER));
         usuarioRepository.save(new Usuario(null, "Tenente Comandante Data", "O", Date.valueOf("2045-10-13"),"cmderdata@gmail.com", "cmderdata", new BCryptPasswordEncoder().encode("chacal@03"), Perfis.USER));
         usuarioRepository.save(new Usuario(null, "Primeiro Oficial Cmt Riker", "M", Date.valueOf("2045-10-13"),"cmderriker@gmail.com", "cmderriker", new BCryptPasswordEncoder().encode("chacal@04"), Perfis.USER));
@@ -39,6 +40,6 @@ public class DBService {
         Optional<Usuario> usuario = usuarioRepository.findById(1L);
         log.info("Usuario encontrado com findById(1L):");
         log.info(usuario.toString());
-        log.info("--------------------------------");
+        log.info("--------------------------------");*/
     }
 }

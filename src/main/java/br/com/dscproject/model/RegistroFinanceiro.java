@@ -17,37 +17,44 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name="TRANSACAO")
-public class Transacao implements Serializable {
+@Table(name="REGISTROS_FINANCEIROS")
+public class RegistroFinanceiro implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID", nullable = false)
+    @Column(name = "REFI_ID", nullable = false)
     private Long id;
 
-    @Column(name = "DESCRICAO", length = 100, nullable = false)
+    @Column(name = "REFI_DESCRICAO", length = 100, nullable = false)
     private String descricao;
 
-    @Column(name = "VALOR", nullable = false)
+    @Column(name = "REFI_VALOR", nullable = false)
     private BigDecimal valor;
 
-    @Column(name = "LANCAMENTO", nullable = false)
+    @Column(name = "REFI_DT_LANCAMENTO", nullable = false)
     private LocalDate dtLancamento;
 
-    @Column(name = "QTD_PARCELA", nullable = false)
+    @Column(name = "REFI_DT_VENCIMENTO", nullable = false)
+    private LocalDate dtVencimento;
+
+    @Column(name = "REFI_QTD_PARCELA", nullable = false)
     private int qtdParcela;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "REFI_TIPO_TRANSACAO", length = 1, nullable = false)
     private TipoTransacao tipoTransacao;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "REFI_TIPO_ENTRADA", length = 1, nullable = false)
     private TipoEntrada tipoEntrada;
 
-    @ManyToMany
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "US_ID", nullable = false, updatable = true)
     private List<Usuario> usuarios;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "INFI_ID", nullable = false, updatable = true)
     private InstituicaoFinanceira instituicaoFinanceira;
 }

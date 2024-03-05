@@ -13,20 +13,21 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name="INSTITUICAO_FINANCEIRA")
+@Table(name="INSTITUICOES_FINANCEIRAS")
 public class InstituicaoFinanceira implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID", nullable = false)
+    @Column(name = "INFI_ID", nullable = false)
     private Long id;
 
-    @Column(name = "NOME", length = 100, nullable = false)
+    @Column(name = "INFI_NOME", length = 100, nullable = false)
     private String nome;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "INFI_TIPO_INSTITUICAO", length = 1, nullable = false)
     private TipoInstituicaoFinanceira tipoInstituicao;
 
 }
