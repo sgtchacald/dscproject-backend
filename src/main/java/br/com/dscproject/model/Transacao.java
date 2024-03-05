@@ -11,6 +11,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -22,7 +23,7 @@ public class Transacao implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID", nullable = false)
     private Long id;
 
@@ -44,7 +45,9 @@ public class Transacao implements Serializable {
     @Enumerated(EnumType.STRING)
     private TipoEntrada tipoEntrada;
 
-    @ManyToOne
-    private Usuario usuario;
+    @ManyToMany
+    private List<Usuario> usuarios;
 
+    @ManyToOne
+    private InstituicaoFinanceira instituicaoFinanceira;
 }

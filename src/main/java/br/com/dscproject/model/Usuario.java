@@ -52,7 +52,6 @@ public class Usuario implements Serializable, UserDetails {
     @Column(name = "PERFIL")
     private Perfis perfil;
 
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if(this.perfil.equals(Perfis.ADMIN)){

@@ -28,8 +28,16 @@ public class Rateio implements Serializable {
     @Column(name = "VALOR", nullable = false)
     private BigDecimal valor;
 
-    @ManyToMany
-    private List<Usuario> sharedWith;
+    @Column(name = "VENCIMENTO", nullable = false)
+    private LocalDate dtVencimento;
+
+    @Column(name = "QTD_PARCELA", nullable = false)
+    private int numeroParcela;
+
+    private boolean contaPaga;
+
+    @ManyToOne
+    private Usuario usuario;
 
     @ManyToOne
     private Transacao transacao;
