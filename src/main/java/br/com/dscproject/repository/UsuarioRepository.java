@@ -1,6 +1,6 @@
 package br.com.dscproject.repository;
 
-import br.com.dscproject.model.Usuario;
+import br.com.dscproject.domain.Usuario;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.lang.NonNull;
@@ -19,5 +19,7 @@ public interface UsuarioRepository extends CrudRepository<Usuario, Long> {
 
     @Query("SELECT u FROM Usuario u WHERE u.login = ?1 OR u.email = ?1")
     List<Usuario> findByCredenciaisList(String valor);
+
+    Usuario findByEmail(String email);
 
 }

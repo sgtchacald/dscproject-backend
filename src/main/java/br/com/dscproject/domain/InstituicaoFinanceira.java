@@ -1,4 +1,4 @@
-package br.com.dscproject.model;
+package br.com.dscproject.domain;
 
 import br.com.dscproject.enums.TipoInstituicaoFinanceira;
 import jakarta.persistence.*;
@@ -27,7 +27,7 @@ public class InstituicaoFinanceira implements Serializable {
     private String nome;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "INFI_TIPO_INSTITUICAO", length = 1, nullable = false)
+    @Column(name = "INFI_TIPO_INSTITUICAO", nullable = false)
     private TipoInstituicaoFinanceira tipoInstituicao;
 
 }

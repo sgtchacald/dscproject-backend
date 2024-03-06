@@ -1,13 +1,11 @@
 package br.com.dscproject.filter;
 
-import br.com.dscproject.model.Usuario;
 import br.com.dscproject.repository.UsuarioRepository;
 import br.com.dscproject.services.TokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.antlr.v4.runtime.Token;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;

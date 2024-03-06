@@ -1,18 +1,14 @@
 package br.com.dscproject.controller;
 
 import br.com.dscproject.dto.UsuarioDTO;
-import br.com.dscproject.model.Usuario;
+import br.com.dscproject.domain.Usuario;
 import br.com.dscproject.services.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
@@ -61,4 +57,8 @@ public class UsuarioController {
         return ResponseEntity.created(uri).build();
     }
 
+    @RequestMapping(value="/existe-usuario", method=RequestMethod.GET)
+    public ResponseEntity<Boolean> buscarPorEmailOuLogin(@RequestParam(value="valor") String valor) {
+        return ResponseEntity.ok().body(usuarioService.verificarSeExisteUsuario(valor));
+    }
 }

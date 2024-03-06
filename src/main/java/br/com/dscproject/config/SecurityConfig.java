@@ -22,7 +22,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private static final String[] ROLE_MATCHERS_ADMIN_GET = {};
-    private static final String[] ROLE_MATCHERS_ADMIN_POST = {"/usuarios/inserir-usuario-sistema"};
+    private static final String[] ROLE_MATCHERS_ADMIN_POST = {
+            "/usuarios/inserir-usuario-sistema"
+    };
     private static final String[] ROLE_MATCHERS_ADMIN_PUT = {};
     private static final String[] ROLE_MATCHERS_ADMIN_DELETE = {};
 
@@ -38,7 +40,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                     authorize -> authorize
                        .requestMatchers(HttpMethod.POST, ROLE_MATCHERS_ADMIN_POST).hasRole(Perfis.ADMIN.getRole())
-                       .anyRequest().permitAll()
+                       .anyRequest()
+                       .permitAll()
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

@@ -1,4 +1,4 @@
-package br.com.dscproject.model;
+package br.com.dscproject.domain;
 
 import br.com.dscproject.enums.TipoEntrada;
 import br.com.dscproject.enums.TipoTransacao;
@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Cascade;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -43,18 +44,17 @@ public class RegistroFinanceiro implements Serializable {
     private int qtdParcela;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "REFI_TIPO_TRANSACAO", length = 1, nullable = false)
+    @Column(name = "REFI_TIPO_TRANSACAO", nullable = false)
     private TipoTransacao tipoTransacao;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "REFI_TIPO_ENTRADA", length = 1, nullable = false)
+    @Column(name = "REFI_TIPO_ENTRADA", nullable = false)
     private TipoEntrada tipoEntrada;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "US_ID", nullable = false, updatable = true)
-    private List<Usuario> usuarios;
+    @JoinColumn(name = "INFU_ID")
+    private InstituicaoFinanceiraUsuario instituicaoFinanceiraUsuario;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "INFI_ID", nullable = false, updatable = true)
-    private InstituicaoFinanceira instituicaoFinanceira;
+
+
 }

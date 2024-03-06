@@ -1,4 +1,4 @@
-package br.com.dscproject.model;
+package br.com.dscproject.domain;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -10,9 +10,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Data @NoArgsConstructor @AllArgsConstructor
 @Entity
 @Table(name="PAGAMENTOS")
 public class Pagamento implements Serializable {
@@ -30,12 +28,8 @@ public class Pagamento implements Serializable {
     @Column(name = "PA_DT_PAGAMENTO", nullable = false)
     private LocalDate dtPagamento;
 
-    @Column(name = "PA_QTD_PARCELA", columnDefinition = "1", nullable = false)
+    @Column(name = "PA_QTD_PARCELA", nullable = false)
     private int numeroParcela;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "US_ID")
-    private Usuario usuario;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "REFI_ID")

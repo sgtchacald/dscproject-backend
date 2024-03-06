@@ -1,9 +1,10 @@
-package br.com.dscproject.model;
+package br.com.dscproject.domain;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Cascade;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -35,12 +36,12 @@ public class InstituicaoFinanceiraUsuario implements Serializable {
     private String telefoneGerente;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "US_ID", nullable = false, updatable = true)
-    private Usuario usuario;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "INFI_ID", nullable = false, updatable = true)
+    @JoinColumn(name = "INFI_ID")
     private InstituicaoFinanceira instituicaoFinanceira;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "USU_ID")
+    private Usuario usuario;
 
 
 

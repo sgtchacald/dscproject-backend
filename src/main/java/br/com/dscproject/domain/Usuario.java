@@ -1,5 +1,6 @@
-package br.com.dscproject.model;
+package br.com.dscproject.domain;
 
+import br.com.dscproject.enums.Genero;
 import br.com.dscproject.enums.Perfis;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
@@ -7,7 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Cascade;
-import org.springframework.boot.autoconfigure.task.TaskExecutionProperties;
+import org.hibernate.annotations.Fetch;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,35 +28,43 @@ public class Usuario implements Serializable, UserDetails {
 
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
-    @Column(name = "US_ID", nullable = false)
+    @Column(name = "USU_ID", nullable = false)
     private Long id;
 
-    @Column(name = "US_NOME", length = 100, nullable = false)
+    @Column(name = "USU_NOME", length = 100, nullable = false)
     private String nome;
 
-    @Column(name = "US_GENERO", length = 1, nullable = true)
-    private String genero;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "USU_GENERO", nullable = false)
+    private Genero genero;
 
     @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
-    @Column(name = "US_DT_NASCIMENTO", nullable = true)
+    @Column(name = "USU_DT_NASCIMENTO", nullable = true)
     private Date nascimento;
 
-    @Column(name = "US_EMAIL", length = 512, nullable = false, unique = true)
+    @Column(name = "USU_EMAIL", length = 512, nullable = false, unique = true)
     private String email;
 
-    @Column(name = "US_LOGIN", length = 40, nullable = false, unique = true)
+    @Column(name = "USU_LOGIN", length = 40, nullable = false, unique = true)
     private String login;
 
-    @Column(name = "US_SENHA", length = 1024, nullable = false)
+    @Column(name = "USU_SENHA", length = 1024, nullable = false)
     private String senha;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "US_PERFIL")
+    @Column(name = "USU_PERFIL", nullable = false)
     private Perfis perfil;
 
-    @OneToMany(mappedBy="instituicaoFinanceira", fetch = FetchType.LAZY, cascade=CascadeType.ALL)
+    @OneToMany(mappedBy="usuario", fetch = FetchType.LAZY)
     @Cascade(value = org.hibernate.annotations.CascadeType.ALL)
     private List<InstituicaoFinanceiraUsuario> instituicoesFinanceirasUsuario;
+
+    @OneToMany(mappedBy="usuario", fetch = FetchType.LAZY)
+    @Cascade(value = org.hibernate.annotations.CascadeType.ALL)
+    private List<RegistroFinanceiroUsuario> registrosFinanceirosUsuario;
+
+    @Transient
+    private List<Pagamento> pagamentos;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
