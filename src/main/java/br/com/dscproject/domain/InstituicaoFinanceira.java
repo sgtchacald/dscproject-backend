@@ -23,7 +23,7 @@ public class InstituicaoFinanceira implements Serializable {
     @Column(name = "INFI_ID", nullable = false)
     private Long id;
 
-    @Column(name = "INFI_NOME", length = 100, nullable = false)
+    @Column(name = "INFI_NOME", length = 100, nullable = false, unique = true)
     private String nome;
 
     @Enumerated(EnumType.STRING)

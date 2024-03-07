@@ -18,6 +18,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 @Data @NoArgsConstructor @AllArgsConstructor
 @Entity
@@ -59,9 +60,13 @@ public class Usuario implements Serializable, UserDetails {
     @Cascade(value = org.hibernate.annotations.CascadeType.ALL)
     private List<InstituicaoFinanceiraUsuario> instituicoesFinanceirasUsuario;
 
-    @OneToMany(mappedBy="usuario", fetch = FetchType.LAZY)
-    @Cascade(value = org.hibernate.annotations.CascadeType.ALL)
-    private List<RegistroFinanceiroUsuario> registrosFinanceirosUsuario;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "REGISTRO_FINANCEIRO_USUARIO",
+            joinColumns = { @JoinColumn(name = "USU_ID") },
+            inverseJoinColumns = { @JoinColumn(name = "REFI_ID") }
+    )
+    private Set<RegistroFinanceiro> registrosFinanceiros;
 
     @Transient
     private List<Pagamento> pagamentos;

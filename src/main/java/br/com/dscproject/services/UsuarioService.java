@@ -24,8 +24,7 @@ public class UsuarioService {
     }
 
     public boolean verificarSeExisteUsuario(String valor) {
-        List<Usuario> usuario = new ArrayList<Usuario>();
-        usuario = usuarioRepository.findByCredenciaisList(valor);
+        List<Usuario> usuario = usuarioRepository.findByCredenciaisList(valor);
         return !usuario.isEmpty();
     }
 

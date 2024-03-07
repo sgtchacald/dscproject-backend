@@ -2,10 +2,10 @@ package br.com.dscproject.enums;
 
 import lombok.*;
 @AllArgsConstructor
-public enum TipoTransacao {
+public enum TipoRegistroFinanceiro {
 
-    ENTRADA("E", "Entrada"),
-    SAIDA("S", "Saida");
+    RECEITA("R", "Receita"),
+    DESPESA("D", "Despesa");
 
     @Getter
     @Setter

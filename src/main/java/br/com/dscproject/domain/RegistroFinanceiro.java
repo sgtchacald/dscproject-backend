@@ -1,7 +1,7 @@
 package br.com.dscproject.domain;
 
-import br.com.dscproject.enums.TipoEntrada;
-import br.com.dscproject.enums.TipoTransacao;
+import br.com.dscproject.enums.TipoReceita;
+import br.com.dscproject.enums.TipoRegistroFinanceiro;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,6 +13,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -45,16 +46,17 @@ public class RegistroFinanceiro implements Serializable {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "REFI_TIPO_TRANSACAO", nullable = false)
-    private TipoTransacao tipoTransacao;
+    private TipoRegistroFinanceiro tipoRegistroFinanceiro;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "REFI_TIPO_ENTRADA", nullable = false)
-    private TipoEntrada tipoEntrada;
+    private TipoReceita tipoReceita;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "INFU_ID")
     private InstituicaoFinanceiraUsuario instituicaoFinanceiraUsuario;
 
-
+    @ManyToMany(mappedBy = "registrosFinanceiros")
+    private Set<Usuario> usuariosResponsaveis;
 
 }

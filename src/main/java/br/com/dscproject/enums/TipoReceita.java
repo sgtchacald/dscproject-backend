@@ -2,7 +2,7 @@ package br.com.dscproject.enums;
 
 import lombok.*;
 @AllArgsConstructor
-public enum TipoEntrada {
+public enum TipoReceita {
 
     SALARIO("S", "Pagamento"),
     SALARIO_DECIMO_TERCEIRO("'D'", "13º Salário"),

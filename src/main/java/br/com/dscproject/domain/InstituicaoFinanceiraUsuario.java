@@ -35,7 +35,7 @@ public class InstituicaoFinanceiraUsuario implements Serializable {
     @Column(name = "INFU_TEL_GERENTE", nullable = false)
     private String telefoneGerente;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "INFI_ID")
     private InstituicaoFinanceira instituicaoFinanceira;
 
