@@ -12,6 +12,8 @@ import java.util.Optional;
 
 @Repository
 public interface InstituicaoFinanceiraRepository extends CrudRepository<InstituicaoFinanceira, Long> {
-    List<InstituicaoFinanceira> findByNome(String nome);
+    InstituicaoFinanceira findByNome(String nome);
+
+    Optional<InstituicaoFinanceira> findById(Long id);
 
 }

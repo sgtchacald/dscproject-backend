@@ -7,7 +7,9 @@ import lombok.Setter;
 @AllArgsConstructor
 public enum TipoInstituicaoFinanceira {
     BANCO("B", "Banco"),
+    CORRETORA("C", "Corretora"),
     FINANCEIRA("F", "Financeira");
+
 
     @Getter
     @Setter
@@ -17,10 +19,10 @@ public enum TipoInstituicaoFinanceira {
     @Setter
     private String descricao;
 
-    public static Genero toEnum(String codigo){
+    public static TipoInstituicaoFinanceira toEnum(String codigo){
 
         if(!codigo.isBlank())
-            for(Genero x : Genero.values()) {
+            for(TipoInstituicaoFinanceira x : TipoInstituicaoFinanceira.values()) {
                 if(codigo.equals(x.getCodigo())) {
                     return x;
                 }
@@ -28,5 +30,6 @@ public enum TipoInstituicaoFinanceira {
 
         throw new IllegalArgumentException("Código: " + codigo + " inválido");
     }
+
 }
 

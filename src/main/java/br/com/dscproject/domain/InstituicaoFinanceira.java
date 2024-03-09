@@ -26,8 +26,15 @@ public class InstituicaoFinanceira implements Serializable {
     @Column(name = "INFI_NOME", length = 100, nullable = false, unique = true)
     private String nome;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "INFI_TIPO_INSTITUICAO", nullable = false)
-    private TipoInstituicaoFinanceira tipoInstituicao;
+    @Column(name = "INFI_TIPO_INSTITUICAO", length = 1, nullable = false)
+    private String tipoInstituicao;
+
+    public TipoInstituicaoFinanceira getTipoInstituicao() {
+        return TipoInstituicaoFinanceira.toEnum(tipoInstituicao);
+    }
+
+    public void setTipoInstituicao (TipoInstituicaoFinanceira tipoInstituicaoFinanceira) {
+        this.tipoInstituicao = tipoInstituicaoFinanceira.getCodigo();
+    }
 
 }
