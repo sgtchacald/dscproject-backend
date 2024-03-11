@@ -2,6 +2,7 @@ package br.com.dscproject.domain;
 
 import br.com.dscproject.enums.Genero;
 import br.com.dscproject.enums.Perfis;
+import br.com.dscproject.enums.TipoInstituicaoFinanceira;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -35,9 +36,8 @@ public class Usuario implements Serializable, UserDetails {
     @Column(name = "USU_NOME", length = 100, nullable = false)
     private String nome;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "USU_GENERO", nullable = false)
-    private Genero genero;
+    @Column(name = "USU_GENERO", length = 1, nullable = false)
+    private String genero;
 
     @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
     @Column(name = "USU_DT_NASCIMENTO", nullable = true)
@@ -70,6 +70,14 @@ public class Usuario implements Serializable, UserDetails {
 
     @Transient
     private List<Pagamento> pagamentos;
+
+    public Genero getGenero() {
+        return Genero.toEnum(genero);
+    }
+
+    public void setGenero (Genero genero) {
+        this.genero = genero.getCodigo();
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
