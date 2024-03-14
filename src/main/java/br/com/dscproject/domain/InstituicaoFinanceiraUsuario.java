@@ -13,7 +13,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name="INSTITUICOES_FINANCEIRAS_USUARIOS")
+@Table(name="INSTITUICOES_FINANCEIRAS_USUARIO")
 public class InstituicaoFinanceiraUsuario implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
@@ -26,7 +26,7 @@ public class InstituicaoFinanceiraUsuario implements Serializable {
     @Column(name = "INFU_AGENCIA", nullable = false)
     private String agencia;
 
-    @Column(name = "INFU_CONTA", nullable = false)
+    @Column(name = "INFU_CONTA", nullable = false, unique = true)
     private String conta;
 
     @Column(name = "INFU_NOM_GERENTE", nullable = false)
