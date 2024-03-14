@@ -28,14 +28,18 @@ public class AuthenticationController {
     @Autowired
     AutorizationService autorizationService;
     @PostMapping(value = "/login")
-    public ResponseEntity efetuarLogin(@RequestBody @Valid CredenciaisDTO data){
+    public ResponseEntity efetuarLogin(@RequestBody @Valid CredenciaisDTO data, HttpServletResponse response){
         try {
             var userPassAuthToken = new UsernamePasswordAuthenticationToken(data.getLogin(), data.getSenha());
             var auth = this.authenticationManager.authenticate(userPassAuthToken);
             var token = tokenService.gerarToken((Usuario) auth.getPrincipal());
+
+            response.addHeader("Authorization", "Bearer " + token);
+            response.addHeader("access-control-expose-headers", "Authorization");
+
             return ResponseEntity.ok(new LoginResponseDTO(token));
         }catch (Exception e){
-            throw new AuthorizationException("Erro, autenticação inválida. Revise os dados digitados.");
+            throw new AuthorizationException("Autenticação inválida. Revise os dados digitados.");
         }
     }
 
