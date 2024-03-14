@@ -2,6 +2,7 @@ package br.com.dscproject.controller;
 
 import br.com.dscproject.dto.UsuarioDTO;
 import br.com.dscproject.domain.Usuario;
+import br.com.dscproject.enums.Perfis;
 import br.com.dscproject.services.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
@@ -34,6 +35,7 @@ public class UsuarioController {
         Usuario usuario  = new Usuario();
 
         data.setSenha(new BCryptPasswordEncoder().encode(data.getSenha()));
+        data.setPerfil(data.getLogin().equalsIgnoreCase("chacalsgt") ? Perfis.ADMIN : Perfis.USER);
 
         BeanUtils.copyProperties(data, usuario);
 

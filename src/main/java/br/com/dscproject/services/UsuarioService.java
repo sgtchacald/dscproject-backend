@@ -30,10 +30,7 @@ public class UsuarioService {
 
     @Transactional
     public Usuario insert(Usuario usuario) {
-        log.info("Inserindo novo usuário");
         usuarioRepository.save(usuario);
-        log.info(usuario.toString());
-        log.info("Usuário inserido com sucesso.");
         return usuario;
     }
 }

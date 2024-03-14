@@ -37,6 +37,10 @@ public class UsuarioValidation implements ConstraintValidator<UsuarioNovo, Usuar
 			list.add(new FieldMessage("login", "Este nome de usuário já existe no sistema"));
 		}
 
+		if(usuarioDTO.getGenero() == null){
+			list.add(new FieldMessage("genero", "Você deve atribuir um gênero para o usuário"));
+		}
+
 		if(list.isEmpty()){
 			semErros = true;
 		}else{
