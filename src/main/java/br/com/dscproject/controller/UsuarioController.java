@@ -7,6 +7,7 @@ import br.com.dscproject.services.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -62,5 +63,10 @@ public class UsuarioController {
     @RequestMapping(value="/existe-usuario", method=RequestMethod.GET)
     public ResponseEntity<Boolean> buscarPorEmailOuLogin(@RequestParam(value="valor") String valor) {
         return ResponseEntity.ok().body(usuarioService.verificarSeExisteUsuario(valor));
+    }
+
+    @RequestMapping(value="/buscar-historico", method=RequestMethod.GET)
+    public ResponseEntity<List<Usuario>> buscarHistoricoUsuarioPorId(@RequestParam(value="id") Long id, Pageable pageable) throws Exception {
+        return ResponseEntity.ok().body(usuarioService.buscarHistoricoUsuarioPorId(id, pageable));
     }
 }

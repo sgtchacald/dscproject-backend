@@ -10,6 +10,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Fetch;
+import org.hibernate.envers.Audited;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,7 +27,9 @@ import java.util.Set;
 @Data @NoArgsConstructor @AllArgsConstructor
 @Entity
 @Table(name="USUARIOS")
-public class Usuario implements Serializable, UserDetails {
+@Audited
+@EntityListeners(AuditingEntityListener.class)
+public class Usuario extends AbstractAuditoria implements Serializable, UserDetails {
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -62,9 +67,9 @@ public class Usuario implements Serializable, UserDetails {
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "REGISTRO_FINANCEIRO_USUARIO",
-            joinColumns = { @JoinColumn(name = "USU_ID") },
-            inverseJoinColumns = { @JoinColumn(name = "REFI_ID") }
+        name = "REGISTRO_FINANCEIRO_USUARIO",
+        joinColumns = { @JoinColumn(name = "USU_ID") },
+        inverseJoinColumns = { @JoinColumn(name = "REFI_ID") }
     )
     private Set<RegistroFinanceiro> registrosFinanceiros;
 

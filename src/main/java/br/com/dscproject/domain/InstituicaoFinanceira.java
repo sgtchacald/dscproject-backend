@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.envers.Audited;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -14,7 +16,9 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Entity
 @Table(name="INSTITUICOES_FINANCEIRAS")
-public class InstituicaoFinanceira implements Serializable {
+@Audited
+@EntityListeners(AuditingEntityListener.class)
+public class InstituicaoFinanceira extends AbstractAuditoria implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 

@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Cascade;
+import org.hibernate.envers.Audited;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -20,7 +22,9 @@ import java.util.Set;
 @AllArgsConstructor
 @Entity
 @Table(name="REGISTROS_FINANCEIROS")
-public class RegistroFinanceiro implements Serializable {
+@Audited
+@EntityListeners(AuditingEntityListener.class)
+public class RegistroFinanceiro extends AbstractAuditoria implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
