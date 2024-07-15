@@ -13,7 +13,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/instituicoes-financeiras")
@@ -23,10 +22,8 @@ public class InstituicaoFinanceiraController {
     private InstituicaoFinanceiraService instituicaoFinanceiraService;
 
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<List<InstituicaoFinanceiraDTO>> buscarTodos(){
-        List<InstituicaoFinanceira> listaInstituicaoFinanceira = instituicaoFinanceiraService.buscarTodos();
-        List <InstituicaoFinanceiraDTO> listaInstituicaoFinanceiraDTO = listaInstituicaoFinanceira.stream().map(InstituicaoFinanceiraDTO::new).collect(Collectors.toList());
-        return ResponseEntity.ok().body(listaInstituicaoFinanceiraDTO);
+    public ResponseEntity<List<InstituicaoFinanceira>> buscarTodos(){
+        return ResponseEntity.ok().body(instituicaoFinanceiraService.buscarTodos());
     }
 
     @RequestMapping(value="/inserir", method = RequestMethod.POST)
