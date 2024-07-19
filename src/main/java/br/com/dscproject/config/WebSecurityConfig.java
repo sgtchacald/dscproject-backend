@@ -1,6 +1,5 @@
 package br.com.dscproject.config;
 
-import br.com.dscproject.enums.Perfis;
 import br.com.dscproject.filter.SecurityFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -19,30 +18,42 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig {
+public class WebSecurityConfig {
 
-    private static final String[] ROLE_MATCHERS_ADMIN_GET = {};
-    private static final String[] ROLE_MATCHERS_ADMIN_POST = {};
-    private static final String[] ROLE_MATCHERS_ADMIN_PUT = {};
-    private static final String[] ROLE_MATCHERS_ADMIN_DELETE = {};
+    private static final String PUBLIC_MATCHERS_GET = "/usuarios/existe-usuario";
+
+    private static final String[] PUBLIC_MATCHERS_POST = {
+            "/auth/recuperar-senha",
+            "/usuarios/inserir-usuario-site",
+            "/auth/login"
+    };
+
+    private static final String[] PUBLIC_MATCHERS_PUT = {};
+
+    private static final String[] PUBLIC_MATCHERS_DELETE = {};
 
     @Autowired
     SecurityFilter securityFilter;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        System.out.println("Configurando a segurança...");
 
-        return httpSecurity
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(
-                    authorize -> authorize
-                       .requestMatchers(HttpMethod.POST, ROLE_MATCHERS_ADMIN_POST).hasRole(Perfis.ADMIN.getRole())
-                       .anyRequest()
-                       .permitAll()
-                )
-                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
+        http
+            .csrf(AbstractHttpConfigurer::disable)
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(
+                authorize -> authorize
+                    .requestMatchers(HttpMethod.GET, PUBLIC_MATCHERS_GET).permitAll()
+                    .requestMatchers(HttpMethod.POST, PUBLIC_MATCHERS_POST).permitAll()
+                    .requestMatchers(HttpMethod.PUT, PUBLIC_MATCHERS_PUT).permitAll()
+                    .requestMatchers(HttpMethod.DELETE, PUBLIC_MATCHERS_DELETE).permitAll()
+                    .anyRequest()
+                    .authenticated()
+            )
+            .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
     }
 
     @Bean
@@ -51,8 +62,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    PasswordEncoder passwordEncoder(){
+    PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
 }

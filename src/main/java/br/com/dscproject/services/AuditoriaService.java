@@ -23,14 +23,8 @@ public class AuditoriaService implements AuditorAware<String> {
 
     @Override
     public Optional<String> getCurrentAuditor() {
-
-        ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-
-        String token = securityFilter.recuperarToken(attr.getRequest());
-
         Usuario usuario = AutorizationService.authenticated();
         String login = usuario != null &&  !usuario.getLogin().isBlank() ? usuario.getLogin() : "INSERIDO_PELO_SITE";
-
         return Optional.of(login);
     }
 

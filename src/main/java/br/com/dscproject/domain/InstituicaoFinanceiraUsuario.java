@@ -46,7 +46,4 @@ public class InstituicaoFinanceiraUsuario  extends AbstractAuditoria implements 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "USU_ID")
     private Usuario usuario;
-
-
-
 }

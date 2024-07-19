@@ -19,10 +19,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Data @NoArgsConstructor @AllArgsConstructor
 @Entity
@@ -61,9 +58,9 @@ public class Usuario extends AbstractAuditoria implements Serializable, UserDeta
     @Column(name = "USU_PERFIL", nullable = false)
     private Perfis perfil;
 
-    @OneToMany(mappedBy="usuario", fetch = FetchType.LAZY)
-    @Cascade(value = org.hibernate.annotations.CascadeType.ALL)
-    private List<InstituicaoFinanceiraUsuario> instituicoesFinanceirasUsuario;
+    //@OneToMany(mappedBy = "usuario", fetch = FetchType.LAZY)
+    //@Cascade(value = org.hibernate.annotations.CascadeType.ALL)
+    //private List<InstituicaoFinanceiraUsuario> instituicoesFinanceirasUsuario = new ArrayList<InstituicaoFinanceiraUsuario>();
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
