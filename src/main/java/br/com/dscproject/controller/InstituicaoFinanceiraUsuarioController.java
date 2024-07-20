@@ -1,11 +1,13 @@
 package br.com.dscproject.controller;
 
 import br.com.dscproject.domain.InstituicaoFinanceiraUsuario;
+import br.com.dscproject.domain.Usuario;
 import br.com.dscproject.dto.InstituicaoFinanceiraUsuarioDTO;
 import br.com.dscproject.services.InstituicaoFinanceiraUsuarioService;
 import br.com.dscproject.services.exceptions.ObjectNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -23,6 +25,12 @@ public class InstituicaoFinanceiraUsuarioController {
     public ResponseEntity<List<InstituicaoFinanceiraUsuario>> buscarTodos(){
         return ResponseEntity.ok().body(instituicaoFinanceiraUsuarioService.buscarTodosPorUsuario());
     }
+
+    @RequestMapping(value="/buscar-por-id/{id}", method=RequestMethod.GET)
+    public ResponseEntity<InstituicaoFinanceiraUsuario> buscarPorId(@PathVariable Long id) throws Exception {
+        return ResponseEntity.ok().body(instituicaoFinanceiraUsuarioService.buscarPorId(id));
+    }
+
 
     @RequestMapping(value="/inserir", method = RequestMethod.POST)
     public ResponseEntity<InstituicaoFinanceiraUsuario> inserir(@Valid @RequestBody InstituicaoFinanceiraUsuarioDTO data){

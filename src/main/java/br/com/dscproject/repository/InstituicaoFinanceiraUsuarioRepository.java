@@ -5,7 +5,9 @@ import br.com.dscproject.domain.Usuario;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface InstituicaoFinanceiraUsuarioRepository extends CrudRepository<InstituicaoFinanceiraUsuario, Long> {
-    InstituicaoFinanceiraUsuario findByUsuario(Usuario usuario);
+    List<InstituicaoFinanceiraUsuario> findByUsuario(Usuario usuario);
 }

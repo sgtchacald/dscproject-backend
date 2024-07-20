@@ -41,8 +41,10 @@ public class InstituicaoFinanceiraUsuarioService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    public List<InstituicaoFinanceiraUsuario> buscarTodos() {
-        return (List<InstituicaoFinanceiraUsuario>) instituticaoFinanceiraUsuarioRepository.findAll();
+    public List<InstituicaoFinanceiraUsuario> buscarTodosPorUsuario() {
+        String loginUsuarioToken = tokenService.validarToken(tokenService.recuperarToken(request));
+        Usuario usuario = usuarioRepository.findByLogin(loginUsuarioToken);
+        return (List<InstituicaoFinanceiraUsuario>) instituticaoFinanceiraUsuarioRepository.findByUsuario(usuario);
     }
 
     public InstituicaoFinanceiraUsuario buscarPorId(Long id) {
