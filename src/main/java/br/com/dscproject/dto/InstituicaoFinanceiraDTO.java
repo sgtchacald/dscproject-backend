@@ -23,8 +23,6 @@ public class InstituicaoFinanceiraDTO {
 
     private Long id;
 
-    @NotEmpty(message="Preenchimento Obrigatório.")
-    @Length(max=100, message="Este campo deve ter no máximo 100 caracteres.")
     private String nome;
 
     private TipoInstituicaoFinanceira tipoInstituicao;

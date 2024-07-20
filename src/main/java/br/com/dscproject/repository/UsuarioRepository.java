@@ -19,7 +19,7 @@ public interface UsuarioRepository extends RevisionRepository<Usuario, Long, Lon
     Optional<Usuario> findById(@NonNull Long id);
 
     @NonNull
-    UserDetails findByLogin(@NonNull String login);
+    Usuario findByLogin(@NonNull String login);
 
     @Query("SELECT u FROM Usuario u WHERE u.login = ?1 OR u.email = ?1")
     List<Usuario> findByCredenciaisList(String valor);

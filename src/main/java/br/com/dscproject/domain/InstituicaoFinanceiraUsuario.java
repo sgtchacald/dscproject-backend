@@ -1,5 +1,7 @@
 package br.com.dscproject.domain;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,23 +29,25 @@ public class InstituicaoFinanceiraUsuario  extends AbstractAuditoria implements 
     @Column(name = "INFU_ID", nullable = false)
     private Long id;
 
-    @Column(name = "INFU_AGENCIA", nullable = false)
+    @Column(name = "INFU_AGENCIA", nullable = false, length=30)
     private String agencia;
 
-    @Column(name = "INFU_CONTA", nullable = false, unique = true)
+    @Column(name = "INFU_CONTA", nullable = false, length=30, unique = true)
     private String conta;
 
-    @Column(name = "INFU_NOM_GERENTE", nullable = false)
-    private String gerente;
+    @Column(name = "INFU_NOM_GERENTE", nullable = false, length=100)
+    private String nomeGerente;
 
-    @Column(name = "INFU_TEL_GERENTE", nullable = false)
+    @Column(name = "INFU_TEL_GERENTE", nullable = false, length=20)
     private String telefoneGerente;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "INFI_ID")
     private InstituicaoFinanceira instituicaoFinanceira;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "USU_ID")
     private Usuario usuario;
+
 }

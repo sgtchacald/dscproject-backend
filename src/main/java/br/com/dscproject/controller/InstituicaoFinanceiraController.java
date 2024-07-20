@@ -36,7 +36,7 @@ public class InstituicaoFinanceiraController {
     }
 
     @RequestMapping(value="/editar/{id}", method = RequestMethod.PUT)
-    public ResponseEntity<InstituicaoFinanceira> update(@Valid @RequestBody InstituicaoFinanceiraDTO data, @PathVariable Long id) throws ObjectNotFoundException {
+    public ResponseEntity<InstituicaoFinanceira> editar(@Valid @RequestBody InstituicaoFinanceiraDTO data, @PathVariable Long id) throws ObjectNotFoundException {
         InstituicaoFinanceira instituicaoFinanceira = new InstituicaoFinanceira();
         BeanUtils.copyProperties(data, instituicaoFinanceira);
         instituicaoFinanceira.setId(id);
