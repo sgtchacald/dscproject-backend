@@ -16,19 +16,15 @@ import org.hibernate.validator.constraints.Length;
 public class InstituicaoFinanceiraUsuarioDTO {
     private Long id;
 
-    @NotEmpty(message="Preenchimento Obrigatório.")
     @Length(max=30, message="Este campo deve ter no máximo 30 caracteres.")
     private String agencia;
 
-    @NotEmpty(message="Preenchimento Obrigatório.")
     @Length(max=30, message="Este campo deve ter no máximo 30 caracteres.")
     private String conta;
 
-    @NotEmpty(message="Preenchimento Obrigatório.")
     @Length(max=100, message="Este campo deve ter no máximo 100 caracteres.")
     private String nomeGerente;
 
-    @NotEmpty(message="Preenchimento Obrigatório.")
     @Length(max=20, message="Este campo deve ter no máximo 20 caracteres.")
     private String telefoneGerente;
 

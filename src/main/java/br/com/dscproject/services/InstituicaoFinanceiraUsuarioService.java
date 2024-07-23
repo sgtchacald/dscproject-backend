@@ -63,29 +63,22 @@ public class InstituicaoFinanceiraUsuarioService {
         InstituicaoFinanceiraUsuario instituicaoFinanceiraUsuario = new InstituicaoFinanceiraUsuario();
         InstituicaoFinanceira instFin = new InstituicaoFinanceira();
 
-        try {
+        BeanUtils.copyProperties(data.getInstituicaoFinanceira(), instFin);
+        data.setInstituicaoFinanceira(new InstituicaoFinanceiraDTO());
 
-            BeanUtils.copyProperties(data.getInstituicaoFinanceira(), instFin);
-            data.setInstituicaoFinanceira(new InstituicaoFinanceiraDTO());
+        BeanUtils.copyProperties(data, instituicaoFinanceiraUsuario);
 
-            BeanUtils.copyProperties(data, instituicaoFinanceiraUsuario);
+        String loginUsuarioToken = tokenService.validarToken(tokenService.recuperarToken(request));
+        Usuario usuario = usuarioRepository.findByLogin(loginUsuarioToken);
 
-            String loginUsuarioToken = tokenService.validarToken(tokenService.recuperarToken(request));
-            Usuario usuario = usuarioRepository.findByLogin(loginUsuarioToken);
+        instituicaoFinanceiraUsuario.setInstituicaoFinanceira(instFin);
+        instituicaoFinanceiraUsuario.setUsuario(usuario);
+        //instituicaoFinanceiraUsuario.setCriadoPor(usuario.getLogin());
+        //instituicaoFinanceiraUsuario.setAlteradoPor(null);
+        //instituicaoFinanceiraUsuario.setDataAlteracao(null);
 
-            instituicaoFinanceiraUsuario.setInstituicaoFinanceira(instFin);
-            instituicaoFinanceiraUsuario.setUsuario(usuario);
-            //instituicaoFinanceiraUsuario.setCriadoPor(usuario.getLogin());
-            //instituicaoFinanceiraUsuario.setAlteradoPor(null);
-            //instituicaoFinanceiraUsuario.setDataAlteracao(null);
+        return instituticaoFinanceiraUsuarioRepository.save(instituicaoFinanceiraUsuario);
 
-            return instituticaoFinanceiraUsuarioRepository.save(instituicaoFinanceiraUsuario);
-
-        } catch (Exception e) {
-            log.error(e.getMessage());
-        }
-
-        return null;
     }
 
     public InstituicaoFinanceiraUsuario editar(InstituicaoFinanceiraUsuarioDTO data) throws ObjectNotFoundException {

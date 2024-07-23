@@ -31,7 +31,6 @@ public class InstituicaoFinanceiraUsuarioController {
         return ResponseEntity.ok().body(instituicaoFinanceiraUsuarioService.buscarPorId(id));
     }
 
-
     @RequestMapping(value="/inserir", method = RequestMethod.POST)
     public ResponseEntity<InstituicaoFinanceiraUsuario> inserir(@Valid @RequestBody InstituicaoFinanceiraUsuarioDTO data){
 

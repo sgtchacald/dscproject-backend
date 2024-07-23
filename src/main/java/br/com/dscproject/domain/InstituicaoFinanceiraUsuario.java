@@ -29,16 +29,16 @@ public class InstituicaoFinanceiraUsuario  extends AbstractAuditoria implements 
     @Column(name = "INFU_ID", nullable = false)
     private Long id;
 
-    @Column(name = "INFU_AGENCIA", nullable = false, length=30)
+    @Column(name = "INFU_AGENCIA", nullable = true, length=30)
     private String agencia;
 
-    @Column(name = "INFU_CONTA", nullable = false, length=30, unique = true)
+    @Column(name = "INFU_CONTA", nullable = true, length=30)
     private String conta;
 
-    @Column(name = "INFU_NOM_GERENTE", nullable = false, length=100)
+    @Column(name = "INFU_NOM_GERENTE", nullable = true, length=100)
     private String nomeGerente;
 
-    @Column(name = "INFU_TEL_GERENTE", nullable = false, length=20)
+    @Column(name = "INFU_TEL_GERENTE", nullable = true, length=20)
     private String telefoneGerente;
 
     @ManyToOne(fetch = FetchType.EAGER)
