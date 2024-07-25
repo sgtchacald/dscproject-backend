@@ -73,9 +73,6 @@ public class InstituicaoFinanceiraUsuarioService {
 
         instituicaoFinanceiraUsuario.setInstituicaoFinanceira(instFin);
         instituicaoFinanceiraUsuario.setUsuario(usuario);
-        //instituicaoFinanceiraUsuario.setCriadoPor(usuario.getLogin());
-        //instituicaoFinanceiraUsuario.setAlteradoPor(null);
-        //instituicaoFinanceiraUsuario.setDataAlteracao(null);
 
         return instituticaoFinanceiraUsuarioRepository.save(instituicaoFinanceiraUsuario);
 

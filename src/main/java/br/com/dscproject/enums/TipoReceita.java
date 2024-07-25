@@ -5,7 +5,7 @@ import lombok.*;
 public enum TipoReceita {
 
     SALARIO("S", "Pagamento"),
-    SALARIO_DECIMO_TERCEIRO("'D'", "13º Salário"),
+    SALARIO_DECIMO_TERCEIRO("D", "13º Salário"),
     EXTRA("E", "Extra"),
     FERIAS("F", "Férias"),
     INVESTIMENTO("I", "Investimento"),

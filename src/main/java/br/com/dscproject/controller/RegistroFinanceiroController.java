@@ -19,19 +19,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(value = "/registro-financeiro")
+@RequestMapping(value = "/registros-financeiros")
 public class RegistroFinanceiroController {
 
     @Autowired
     RegistroFinanceiroService registroFinanceiroService;
 
-    /*@RequestMapping(value="/inserir", method = RequestMethod.POST)
+    @RequestMapping(value="/inserir", method = RequestMethod.POST)
     public ResponseEntity<RegistroFinanceiro> inserirUsuarioSite(@Valid @RequestBody RegistroFinanceiroDTO data){
-        RegistroFinanceiro registroFinanceiro  = new RegistroFinanceiro();
-        BeanUtils.copyProperties(data, registroFinanceiro);
-        registroFinanceiro = registroFinanceiroService.inserir(registroFinanceiro);
-        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(usuario.getId()).toUri();
+        RegistroFinanceiro registroFinanceiro = registroFinanceiroService.inserir(data);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(registroFinanceiro.getId()).toUri();
         return ResponseEntity.created(uri).build();
-    }*/
+    }
 
 }

@@ -58,10 +58,6 @@ public class Usuario extends AbstractAuditoria implements Serializable, UserDeta
     @Column(name = "USU_PERFIL", nullable = false)
     private Perfis perfil;
 
-    //@OneToMany(mappedBy = "usuario", fetch = FetchType.LAZY)
-    //@Cascade(value = org.hibernate.annotations.CascadeType.ALL)
-    //private List<InstituicaoFinanceiraUsuario> instituicoesFinanceirasUsuario = new ArrayList<InstituicaoFinanceiraUsuario>();
-
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "REGISTRO_FINANCEIRO_USUARIO",

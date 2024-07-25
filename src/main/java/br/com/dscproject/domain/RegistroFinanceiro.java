@@ -6,15 +6,15 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Cascade;
 import org.hibernate.envers.Audited;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 
 @Data
@@ -40,9 +40,9 @@ public class RegistroFinanceiro extends AbstractAuditoria implements Serializabl
     private BigDecimal valor;
 
     @Column(name = "REFI_DT_LANCAMENTO", nullable = false)
-    private LocalDate dtLancamento;
+    private Instant dtLancamento;
 
-    @Column(name = "REFI_DT_VENCIMENTO", nullable = false)
+    @Column(name = "REFI_DT_VENCIMENTO", nullable = true)
     private LocalDate dtVencimento;
 
     @Column(name = "REFI_QTD_PARCELA", nullable = false)
@@ -53,7 +53,7 @@ public class RegistroFinanceiro extends AbstractAuditoria implements Serializabl
     private TipoRegistroFinanceiro tipoRegistroFinanceiro;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "REFI_TIPO_ENTRADA", nullable = false)
+    @Column(name = "REFI_TIPO_ENTRADA", nullable = true)
     private TipoReceita tipoReceita;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -61,6 +61,6 @@ public class RegistroFinanceiro extends AbstractAuditoria implements Serializabl
     private InstituicaoFinanceiraUsuario instituicaoFinanceiraUsuario;
 
     @ManyToMany(mappedBy = "registrosFinanceiros")
-    private Set<Usuario> usuariosResponsaveis;
+    private Set<Usuario> usuariosResponsaveis = new HashSet<Usuario>();
 
 }
