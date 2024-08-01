@@ -2,6 +2,7 @@ package br.com.dscproject.domain;
 
 import br.com.dscproject.enums.TipoReceitaDespesa;
 import br.com.dscproject.enums.TipoRegistroFinanceiro;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -59,10 +60,12 @@ public class RegistroFinanceiro extends AbstractAuditoria implements Serializabl
     @Column(name = "REFI_TIPO_RECEITA_DESPESA", nullable = true)
     private TipoReceitaDespesa tipoReceitaDespesa;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "INFU_ID")
     private InstituicaoFinanceiraUsuario instituicaoFinanceiraUsuario;
 
+    @JsonIgnore
     @ManyToMany(mappedBy = "registrosFinanceiros")
     private Set<Usuario> usuariosResponsaveis = new HashSet<Usuario>();
 

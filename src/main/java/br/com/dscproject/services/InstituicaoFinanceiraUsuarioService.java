@@ -78,6 +78,7 @@ public class InstituicaoFinanceiraUsuarioService {
 
     }
 
+    @Transactional
     public InstituicaoFinanceiraUsuario editar(InstituicaoFinanceiraUsuarioDTO data) throws ObjectNotFoundException {
 
         InstituicaoFinanceiraUsuario instituticaoFinanceiraUsuarioBanco = this.buscarPorId(data.getId());

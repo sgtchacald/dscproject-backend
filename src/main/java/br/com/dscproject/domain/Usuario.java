@@ -2,24 +2,23 @@ package br.com.dscproject.domain;
 
 import br.com.dscproject.enums.Genero;
 import br.com.dscproject.enums.Perfis;
-import br.com.dscproject.enums.TipoInstituicaoFinanceira;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.Fetch;
 import org.hibernate.envers.Audited;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 @Data @NoArgsConstructor @AllArgsConstructor
 @Entity
