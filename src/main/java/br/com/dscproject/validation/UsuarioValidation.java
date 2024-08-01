@@ -1,15 +1,13 @@
 package br.com.dscproject.validation;
 
+import br.com.dscproject.controller.Exception.FieldMessage;
+import br.com.dscproject.domain.Usuario;
 import br.com.dscproject.dto.UsuarioDTO;
 import br.com.dscproject.repository.UsuarioRepository;
-import br.com.dscproject.controller.Exception.FieldMessage;
 import br.com.dscproject.validation.constraints.UsuarioNovo;
-import br.com.dscproject.domain.Usuario;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -4,18 +4,16 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+@Getter
 @AllArgsConstructor
 public enum TipoInstituicaoFinanceira {
     BANCO("B", "Banco"),
-    CORRETORA("C", "Corretora"),
-    FINANCEIRA("F", "Financeira");
+    CORRETORA("C", "Corretora");
 
 
-    @Getter
     @Setter
     private String codigo;
 
-    @Getter
     @Setter
     private String descricao;
 

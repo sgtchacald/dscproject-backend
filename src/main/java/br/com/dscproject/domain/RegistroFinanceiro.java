@@ -1,6 +1,6 @@
 package br.com.dscproject.domain;
 
-import br.com.dscproject.enums.TipoReceita;
+import br.com.dscproject.enums.TipoReceitaDespesa;
 import br.com.dscproject.enums.TipoRegistroFinanceiro;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -45,6 +45,9 @@ public class RegistroFinanceiro extends AbstractAuditoria implements Serializabl
     @Column(name = "REFI_DT_VENCIMENTO", nullable = true)
     private LocalDate dtVencimento;
 
+    @Column(name = "REFI_DIA_VENCIMENTO", nullable = true)
+    private int diaVencimento;
+
     @Column(name = "REFI_QTD_PARCELA", nullable = false)
     private int qtdParcela;
 
@@ -53,8 +56,8 @@ public class RegistroFinanceiro extends AbstractAuditoria implements Serializabl
     private TipoRegistroFinanceiro tipoRegistroFinanceiro;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "REFI_TIPO_ENTRADA", nullable = true)
-    private TipoReceita tipoReceita;
+    @Column(name = "REFI_TIPO_RECEITA_DESPESA", nullable = true)
+    private TipoReceitaDespesa tipoReceitaDespesa;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "INFU_ID")
