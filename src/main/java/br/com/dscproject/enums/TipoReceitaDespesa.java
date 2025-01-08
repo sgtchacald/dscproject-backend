@@ -14,9 +14,10 @@ public enum TipoReceitaDespesa {
     //Despesas
     MORADIA("MORADIA", "Moradia"),
     ALIMENTACAO("ALIMENTACAO", "Alimentação"),
-    LAZER("LAZER", "Alimentação"),
+    LAZER("LAZER", "Lazer"),
     VESTUARIO("VESTUARIO", "Vestuário"),
     TRANSPORTE("TRANSPORTE", "Transporte"),
+    CARRO("CARRO", "Carro"),
     SAUDE("SAUDE", "Saúde"),
     EDUCACAO("EDUCACAO", "Educação"),
     SERVICOS("SERVICOS", "Serviços"),
