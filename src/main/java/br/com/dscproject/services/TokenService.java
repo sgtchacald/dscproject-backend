@@ -28,6 +28,7 @@ public class TokenService {
                     .withIssuer(whithIsUser)
                     .withSubject(usuario.getLogin())
                     .withExpiresAt(new Date(System.currentTimeMillis() + expiration))
+                    .withClaim("id", usuario.getId())
                     .withClaim("nome", usuario.getNome())
                     .withClaim("email", usuario.getEmail())
                     .withClaim("login", usuario.getLogin())
