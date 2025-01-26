@@ -1,10 +1,8 @@
 package br.com.dscproject.dto;
 
-import br.com.dscproject.enums.TipoReceitaDespesa;
+import br.com.dscproject.enums.CategoriaRegistroFinanceiro;
 import br.com.dscproject.enums.TipoRegistroFinanceiro;
 import br.com.dscproject.validation.constraints.RegistroFinanceiro;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
@@ -29,9 +27,9 @@ public class RegistroFinanceiroDTO {
 
     private int diaVencimento;
 
-    private TipoRegistroFinanceiro tipoRegistroFinanceiro;
+    private CategoriaRegistroFinanceiro categoriaRegistroFinanceiro;
 
-    private TipoReceitaDespesa tipoReceitaDespesa;
+    private TipoRegistroFinanceiro tipoRegistroFinanceiro;
 
     private Long instituicaoFinanceiraUsuarioId;
 

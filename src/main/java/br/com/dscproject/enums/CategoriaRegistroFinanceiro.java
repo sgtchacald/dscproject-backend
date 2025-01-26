@@ -2,7 +2,7 @@ package br.com.dscproject.enums;
 
 import lombok.*;
 @AllArgsConstructor
-public enum TipoReceitaDespesa {
+public enum CategoriaRegistroFinanceiro {
 
     //Receitas
     SALARIO("SALARIO", "Pagamento"),
@@ -32,10 +32,10 @@ public enum TipoReceitaDespesa {
     @Setter
     private String descricao;
 
-    public static TipoReceitaDespesa toEnum(String codigo){
+    public static CategoriaRegistroFinanceiro toEnum(String codigo){
 
         if(!codigo.isBlank())
-            for(TipoReceitaDespesa x : TipoReceitaDespesa.values()) {
+            for(CategoriaRegistroFinanceiro x : CategoriaRegistroFinanceiro.values()) {
                 if(codigo.equals(x.getCodigo())) {
                     return x;
                 }

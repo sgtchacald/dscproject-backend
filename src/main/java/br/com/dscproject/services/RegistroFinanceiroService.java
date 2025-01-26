@@ -110,7 +110,7 @@ public class RegistroFinanceiroService {
         registroFinanceiroBanco.setDescricao(data.getDescricao());
         registroFinanceiroBanco.setValor(data.getValor());
         registroFinanceiroBanco.setTipoRegistroFinanceiro(data.getTipoRegistroFinanceiro());
-        registroFinanceiroBanco.setTipoReceitaDespesa(data.getTipoReceitaDespesa());
+        registroFinanceiroBanco.setCategoriaRegistroFinanceiro(data.getCategoriaRegistroFinanceiro());
 
         if(data.getDtVencimento() != null) {
             registroFinanceiroBanco.setDtVencimento(DateUtils.retornaLocalDate(data.getDtVencimento(), "dd/MM/yyyy"));

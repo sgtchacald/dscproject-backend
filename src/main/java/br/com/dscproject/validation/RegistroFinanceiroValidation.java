@@ -40,7 +40,7 @@ public class RegistroFinanceiroValidation implements ConstraintValidator<Registr
 			list.add(new FieldMessage("tipoRegistroFinanceiro", "O campo é obrigatório."));
 		}
 
-		if(data.getTipoReceitaDespesa() == null){
+		if(data.getTipoRegistroFinanceiro() == null){
 			list.add(new FieldMessage("tipoReceitaDespesa", "O campo é obrigatório."));
 		}
 

@@ -1,6 +1,6 @@
 package br.com.dscproject.domain;
 
-import br.com.dscproject.enums.TipoReceitaDespesa;
+import br.com.dscproject.enums.CategoriaRegistroFinanceiro;
 import br.com.dscproject.enums.TipoRegistroFinanceiro;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -58,7 +58,7 @@ public class RegistroFinanceiro extends AbstractAuditoria implements Serializabl
 
     @Enumerated(EnumType.STRING)
     @Column(name = "REFI_TIPO_RECEITA_DESPESA", nullable = true)
-    private TipoReceitaDespesa tipoReceitaDespesa;
+    private CategoriaRegistroFinanceiro categoriaRegistroFinanceiro;
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER)

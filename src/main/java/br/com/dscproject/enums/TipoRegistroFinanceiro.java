@@ -1,6 +1,9 @@
 package br.com.dscproject.enums;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+
 @AllArgsConstructor
 public enum TipoRegistroFinanceiro {
 
@@ -15,10 +18,10 @@ public enum TipoRegistroFinanceiro {
     @Setter
     private String descricao;
 
-    public static Genero toEnum(String codigo){
+    public static TipoRegistroFinanceiro toEnum(String codigo){
 
         if(!codigo.isBlank())
-            for(Genero x : Genero.values()) {
+            for(TipoRegistroFinanceiro x : TipoRegistroFinanceiro.values()) {
                 if(codigo.equals(x.getCodigo())) {
                     return x;
                 }
