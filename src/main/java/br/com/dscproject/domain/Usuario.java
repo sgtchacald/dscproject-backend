@@ -2,10 +2,11 @@ package br.com.dscproject.domain;
 
 import br.com.dscproject.enums.Genero;
 import br.com.dscproject.enums.Perfis;
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.envers.Audited;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -15,10 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Data @NoArgsConstructor @AllArgsConstructor
 @Entity
@@ -57,13 +55,9 @@ public class Usuario extends AbstractAuditoria implements Serializable, UserDeta
     @Column(name = "USU_PERFIL", nullable = false)
     private Perfis perfil;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-        name = "REGISTRO_FINANCEIRO_USUARIO",
-        joinColumns = { @JoinColumn(name = "USU_ID") },
-        inverseJoinColumns = { @JoinColumn(name = "REFI_ID") }
-    )
-    private Set<RegistroFinanceiro> registrosFinanceiros;
+    @ManyToMany(mappedBy = "usuariosResponsaveis", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Set<RegistroFinanceiro> registrosFinanceiros = new HashSet<>();
 
     @Transient
     private List<Pagamento> pagamentos;

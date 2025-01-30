@@ -29,7 +29,7 @@ public class RegistroFinanceiroController {
     RegistroFinanceiroService registroFinanceiroService;
 
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<List<RegistroFinanceiro>> buscarTodos(){
+    public ResponseEntity<List<RegistroFinanceiroDTO>> buscarTodos(){
         return ResponseEntity.ok().body(registroFinanceiroService.buscarTodosPorUsuario());
     }
 
@@ -39,7 +39,7 @@ public class RegistroFinanceiroController {
     }
 
     @RequestMapping(value="/inserir", method = RequestMethod.POST)
-    public ResponseEntity<RegistroFinanceiro> inserirUsuarioSite(@Valid @RequestBody RegistroFinanceiroDTO data){
+    public ResponseEntity<RegistroFinanceiro> inserir(@Valid @RequestBody RegistroFinanceiroDTO data){
         RegistroFinanceiro registroFinanceiro = registroFinanceiroService.inserir(data);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(registroFinanceiro.getId()).toUri();
         return ResponseEntity.created(uri).build();

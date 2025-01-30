@@ -59,7 +59,7 @@ public class RegistroFinanceiroValidation implements ConstraintValidator<Registr
 			list.add(new FieldMessage("usuariosResponsaveis", "O campo é obrigatório."));
 		}
 
-		if(data.getTipoRegistroFinanceiro() != null
+		/*if(data.getTipoRegistroFinanceiro() != null
 			&& data.getTipoRegistroFinanceiro().equals(TipoRegistroFinanceiro.DESPESA)
 			&& data.getQtdParcela() > 1
 			&& data.getDiaVencimento() == 0){
@@ -68,7 +68,7 @@ public class RegistroFinanceiroValidation implements ConstraintValidator<Registr
 
 		if(data.getDiaVencimento() != 0 && !DateUtils.isDiaDoMesValido(data.getDiaVencimento())){
 			list.add(new FieldMessage("diaVencimento", "O dia do vencimento deve estar entre 1 e 31."));
-		}
+		}*/
 
 		if(data.getTipoRegistroFinanceiro() != null
 			&& data.getTipoRegistroFinanceiro().equals(TipoRegistroFinanceiro.DESPESA)

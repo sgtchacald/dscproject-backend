@@ -16,16 +16,14 @@ import br.com.dscproject.utils.DateUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.buf.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -49,10 +47,36 @@ public class RegistroFinanceiroService {
     @Autowired
     private HttpServletRequest request;
 
-    public List<RegistroFinanceiro> buscarTodosPorUsuario() {
+    @Transactional
+    public List<RegistroFinanceiroDTO> buscarTodosPorUsuario() {
         String loginUsuarioToken = tokenService.validarToken(tokenService.recuperarToken(request));
         Usuario usuario = usuarioRepository.findByLogin(loginUsuarioToken);
-        return (List<RegistroFinanceiro>) registroFinanceiroRepositoryCustom.buscarRegistroFinanceiroPorUsuario(usuario);
+
+        List<RegistroFinanceiroDTO> registroFinanceiroDTOList = new ArrayList<>();
+
+        List<RegistroFinanceiro> registroFinanceiroList = new ArrayList<>();
+        registroFinanceiroList = registroFinanceiroRepositoryCustom.buscarRegistroFinanceiroPorUsuario(usuario);
+
+        for (RegistroFinanceiro registroFinanceiro : registroFinanceiroList) {
+            RegistroFinanceiroDTO dto = new RegistroFinanceiroDTO();
+            BeanUtils.copyProperties(registroFinanceiro, dto);
+            dto.setInstituicaoFinanceiraUsuarioId(registroFinanceiro.getInstituicaoFinanceiraUsuario().getId());
+
+            Set<Long> usuariosResponsaveis = new HashSet<Long>();
+            if(registroFinanceiro.getId() != null) {
+                usuariosResponsaveis = registroFinanceiroRepository.findUsuariosByRegistroFinanceiroId(registroFinanceiro.getId());
+            }
+
+            if(!usuariosResponsaveis.isEmpty()){
+                for (Long usuarioId : usuariosResponsaveis) {
+                  dto.getUsuariosResponsaveis().add(usuarioId);
+                }
+            }
+
+            registroFinanceiroDTOList.add(dto);
+        }
+
+        return registroFinanceiroDTOList;
     }
 
     public RegistroFinanceiro buscarPorId(Long id) {
@@ -84,6 +108,7 @@ public class RegistroFinanceiroService {
 
         registroFinanceiro.setInstituicaoFinanceiraUsuario(instituicaoFinanceiraUsuario);
 
+        registroFinanceiro.setStatusPagamento(data.getStatusPagamento());
 
         Set<Usuario> usuarios = new HashSet<Usuario>();
         for(Long usuarioId : data.getUsuariosResponsaveis()){
@@ -91,11 +116,11 @@ public class RegistroFinanceiroService {
             if(usuario.isEmpty()){
                 throw new ObjectNotFoundException("Não foi possível encontrar o usuario com o id  " + usuarioId + ".");
             }
-            usuario.ifPresent(usuarios::add);
+            usuarios.add(usuario.get());
         }
 
         if(!usuarios.isEmpty()){
-            registroFinanceiro.setUsuariosResponsaveis(usuarios);
+            registroFinanceiro.getUsuariosResponsaveis().addAll(usuarios);
         }
 
         registroFinanceiroRepository.save(registroFinanceiro);

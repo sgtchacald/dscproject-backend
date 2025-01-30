@@ -1,12 +1,14 @@
 package br.com.dscproject.dto;
 
 import br.com.dscproject.enums.CategoriaRegistroFinanceiro;
+import br.com.dscproject.enums.StatusPagamento;
 import br.com.dscproject.enums.TipoRegistroFinanceiro;
 import br.com.dscproject.validation.constraints.RegistroFinanceiro;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,7 +18,6 @@ public class RegistroFinanceiroDTO {
 
     private Long id;
 
-    @Length(max=100, message="O campo deve ter no máximo 100 caracteres.")
     private String descricao;
 
     private BigDecimal valor;
@@ -25,11 +26,13 @@ public class RegistroFinanceiroDTO {
 
     private String dtVencimento;
 
-    private int diaVencimento;
+    //private int diaVencimento;
 
     private CategoriaRegistroFinanceiro categoriaRegistroFinanceiro;
 
     private TipoRegistroFinanceiro tipoRegistroFinanceiro;
+
+    private StatusPagamento statusPagamento;
 
     private Long instituicaoFinanceiraUsuarioId;
 

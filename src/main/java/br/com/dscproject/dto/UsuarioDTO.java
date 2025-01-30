@@ -13,6 +13,8 @@ import org.hibernate.validator.constraints.Length;
 @UsuarioNovo
 public class UsuarioDTO {
 
+    private Long id;
+
     @NotEmpty(message="Preenchimento Obrigatório.")
     @Length(max=100, message="Este campo deve ter no máximo 100 caracteres.")
     private String nome;
@@ -36,11 +38,12 @@ public class UsuarioDTO {
 
 
     public UsuarioDTO(Usuario usuario) {
-        this.nome = usuario.getNome();
+        this.id     = usuario.getId();
+        this.nome   = usuario.getNome();
         this.genero = usuario.getGenero();
-        this.email = usuario.getEmail();
-        this.login = usuario.getLogin();
-        this.senha = usuario.getSenha();
+        this.email  = usuario.getEmail();
+        this.login  = usuario.getLogin();
+        this.senha  = usuario.getSenha();
         this.perfil = usuario.getPerfil();
     }
 }
