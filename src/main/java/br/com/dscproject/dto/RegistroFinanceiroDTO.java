@@ -26,6 +26,8 @@ public class RegistroFinanceiroDTO {
 
     private String dtVencimento;
 
+    private String dtLancamento;
+
     //private int diaVencimento;
 
     private CategoriaRegistroFinanceiro categoriaRegistroFinanceiro;

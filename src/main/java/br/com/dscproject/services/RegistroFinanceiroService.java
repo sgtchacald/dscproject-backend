@@ -62,6 +62,14 @@ public class RegistroFinanceiroService {
             BeanUtils.copyProperties(registroFinanceiro, dto);
             dto.setInstituicaoFinanceiraUsuarioId(registroFinanceiro.getInstituicaoFinanceiraUsuario().getId());
 
+            if(registroFinanceiro.getDtLancamento() != null) {
+                dto.setDtLancamento(registroFinanceiro.getDtLancamento().toString());
+            }
+
+            if(registroFinanceiro.getDtVencimento() != null) {
+                dto.setDtVencimento(registroFinanceiro.getDtVencimento().toString());
+            }
+
             Set<Long> usuariosResponsaveis = new HashSet<Long>();
             if(registroFinanceiro.getId() != null) {
                 usuariosResponsaveis = registroFinanceiroRepository.findUsuariosByRegistroFinanceiroId(registroFinanceiro.getId());
@@ -111,6 +119,7 @@ public class RegistroFinanceiroService {
         registroFinanceiro.setStatusPagamento(data.getStatusPagamento());
 
         Set<Usuario> usuarios = new HashSet<Usuario>();
+
         for(Long usuarioId : data.getUsuariosResponsaveis()){
             Optional<Usuario> usuario = usuarioRepository.findById(usuarioId);
             if(usuario.isEmpty()){
@@ -123,7 +132,7 @@ public class RegistroFinanceiroService {
             registroFinanceiro.getUsuariosResponsaveis().addAll(usuarios);
         }
 
-        registroFinanceiroRepository.save(registroFinanceiro);
+        //registroFinanceiroRepository.save(registroFinanceiro);
 
         return registroFinanceiro;
     }
