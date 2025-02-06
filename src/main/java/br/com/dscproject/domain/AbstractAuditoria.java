@@ -22,7 +22,7 @@ public class AbstractAuditoria {
 
     @JsonIgnore
     @CreatedBy
-    @Column(name = "audit_criado_por", nullable = false, length = 40, updatable = false)
+    @Column(name = "audit_criado_por", length = 40, updatable = false)
     private String criadoPor;
 
     @JsonIgnore

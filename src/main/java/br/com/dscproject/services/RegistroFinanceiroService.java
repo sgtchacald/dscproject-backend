@@ -1,15 +1,9 @@
 package br.com.dscproject.services;
 
-import br.com.dscproject.domain.InstituicaoFinanceira;
-import br.com.dscproject.domain.InstituicaoFinanceiraUsuario;
-import br.com.dscproject.domain.RegistroFinanceiro;
-import br.com.dscproject.domain.Usuario;
+import br.com.dscproject.domain.*;
 import br.com.dscproject.dto.InstituicaoFinanceiraUsuarioDTO;
 import br.com.dscproject.dto.RegistroFinanceiroDTO;
-import br.com.dscproject.repository.InstituicaoFinanceiraUsuarioRepository;
-import br.com.dscproject.repository.RegistroFinanceiroRepository;
-import br.com.dscproject.repository.RegistroFinanceiroRepositoryCustom;
-import br.com.dscproject.repository.UsuarioRepository;
+import br.com.dscproject.repository.*;
 import br.com.dscproject.services.exceptions.DataIntegrityException;
 import br.com.dscproject.services.exceptions.ObjectNotFoundException;
 import br.com.dscproject.utils.DateUtils;
@@ -24,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -39,6 +34,9 @@ public class RegistroFinanceiroService {
     private RegistroFinanceiroRepository registroFinanceiroRepository;
 
     @Autowired
+    private RegistroFinanceiroUsuarioRepository registroFinanceiroUsuarioRepository;
+
+    @Autowired
     private RegistroFinanceiroRepositoryCustom registroFinanceiroRepositoryCustom;
 
     @Autowired
@@ -46,6 +44,7 @@ public class RegistroFinanceiroService {
 
     @Autowired
     private HttpServletRequest request;
+
 
     @Transactional
     public List<RegistroFinanceiroDTO> buscarTodosPorUsuario() {
@@ -96,8 +95,10 @@ public class RegistroFinanceiroService {
         );
     }
 
-    @Transactional
     public RegistroFinanceiro inserir(RegistroFinanceiroDTO data) {
+        String loginUsuarioToken = tokenService.validarToken(tokenService.recuperarToken(request));
+        Usuario usuario = usuarioRepository.findByLogin(loginUsuarioToken);
+
         RegistroFinanceiro registroFinanceiro  = new RegistroFinanceiro();
         BeanUtils.copyProperties(data, registroFinanceiro);
 
@@ -118,22 +119,44 @@ public class RegistroFinanceiroService {
 
         registroFinanceiro.setStatusPagamento(data.getStatusPagamento());
 
-        Set<Usuario> usuarios = new HashSet<Usuario>();
 
-        for(Long usuarioId : data.getUsuariosResponsaveis()){
-            Optional<Usuario> usuario = usuarioRepository.findById(usuarioId);
-            if(usuario.isEmpty()){
-                throw new ObjectNotFoundException("Não foi possível encontrar o usuario com o id  " + usuarioId + ".");
+        //Busca dados para fazer a divisão da despesa
+        Set<Long> usuariosResponsaveisData = new HashSet<>(Set.of()); //utilizo um [Set] para não haver registros repetidos
+        usuariosResponsaveisData.addAll(data.getUsuariosResponsaveis());
+
+        //Transformo em um list para ficar melhor de manipular
+        List<Long> usuariosResponsaveisDataList = new ArrayList<Long>(usuariosResponsaveisData);
+
+        //Busco os usuarios no banco para a divisão de gastos.
+        List<Usuario> usuarioList = usuariosResponsaveisDataList
+            .stream()
+            .map(usuarioId -> usuarioRepository
+                    .findById(usuarioId)
+                    .orElseThrow(() -> new ObjectNotFoundException("Não foi possível encontrar o usuário com o id " + usuarioId))
+                )
+            .toList();
+
+        //Adiciono os usuarios responsáveis na lista
+        //registroFinanceiro.setUsuariosResponsaveis(usuarioList);
+
+        //Seta Auditoria
+        registroFinanceiro.setCriadoPor(usuario.getLogin());
+
+        //Por fim, gravo o registro financeiro
+        registroFinanceiroRepository.save(registroFinanceiro);
+
+        //Se houver usuario para divisão do registro financeiro, insere na tabela associativa REGISTRO_FINANCEIRO_USUARIO
+        if(!usuarioList.isEmpty()) {
+            for (Usuario u : usuarioList) {
+                RegistroFinanceiroUsuario registroFinanceiroUsuario = new RegistroFinanceiroUsuario();
+                registroFinanceiroUsuario.setRegistroFinanceiro(registroFinanceiro);
+                registroFinanceiroUsuario.setUsuario(u);
+                registroFinanceiroUsuario.setCriadoPor(usuario.getLogin());
+                registroFinanceiroUsuarioRepository.save(registroFinanceiroUsuario);
             }
-            usuarios.add(usuario.get());
         }
 
-        if(!usuarios.isEmpty()){
-            registroFinanceiro.getUsuariosResponsaveis().addAll(usuarios);
-        }
-
-        //registroFinanceiroRepository.save(registroFinanceiro);
-
+        //Retorno o registro financeiro
         return registroFinanceiro;
     }
 
@@ -160,7 +183,7 @@ public class RegistroFinanceiroService {
         registroFinanceiroBanco.setInstituicaoFinanceiraUsuario(instituicaoFinanceiraUsuario);
 
 
-        Set<Usuario> usuarios = new HashSet<Usuario>();
+        /*Set<Usuario> usuarios = new HashSet<Usuario>();
         for(Long usuarioId : data.getUsuariosResponsaveis()){
             Optional<Usuario> usuario = usuarioRepository.findById(usuarioId);
             if(usuario.isEmpty()){
@@ -171,7 +194,7 @@ public class RegistroFinanceiroService {
 
         if(!usuarios.isEmpty()){
             registroFinanceiroBanco.setUsuariosResponsaveis(usuarios);
-        }
+        }*/
 
         return registroFinanceiroRepository.save(registroFinanceiroBanco);
     }

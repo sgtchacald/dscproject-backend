@@ -3,15 +3,9 @@ package br.com.dscproject.domain;
 import br.com.dscproject.enums.CategoriaRegistroFinanceiro;
 import br.com.dscproject.enums.StatusPagamento;
 import br.com.dscproject.enums.TipoRegistroFinanceiro;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.envers.Audited;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -21,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Data @NoArgsConstructor @AllArgsConstructor
@@ -78,15 +73,9 @@ public class RegistroFinanceiro extends AbstractAuditoria implements Serializabl
     @JoinColumn(name = "INFU_ID")
     private InstituicaoFinanceiraUsuario instituicaoFinanceiraUsuario;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "REGISTRO_FINANCEIRO_USUARIO",
-            joinColumns = @JoinColumn(name = "REFI_ID"),
-            inverseJoinColumns = @JoinColumn(name = "USU_ID")
-    )
     @JsonIgnore
-    private Set<Usuario> usuariosResponsaveis;
-
-
+    @ManyToMany(cascade = { CascadeType.MERGE, CascadeType.PERSIST }, fetch = FetchType.LAZY)
+    @JoinTable(name = "REGISTRO_FINANCEIRO_USUARIO", joinColumns = @JoinColumn(name = "REFI_ID"), inverseJoinColumns = @JoinColumn(name = "USU_ID"))
+    private List<Usuario> usuariosResponsaveis;
 
 }

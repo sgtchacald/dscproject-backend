@@ -55,10 +55,6 @@ public class Usuario extends AbstractAuditoria implements Serializable, UserDeta
     @Column(name = "USU_PERFIL", nullable = false)
     private Perfis perfil;
 
-    @ManyToMany(mappedBy = "usuariosResponsaveis", fetch = FetchType.LAZY)
-    @JsonIgnore
-    private Set<RegistroFinanceiro> registrosFinanceiros = new HashSet<>();
-
     @Transient
     private List<Pagamento> pagamentos;
 
