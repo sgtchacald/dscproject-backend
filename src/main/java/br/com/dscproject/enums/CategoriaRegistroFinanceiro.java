@@ -22,6 +22,7 @@ public enum CategoriaRegistroFinanceiro {
     EDUCACAO("EDUCACAO", "Educação"),
     SERVICOS("SERVICOS", "Serviços"),
     EMPRESTIMOS("EMPRESTIMOS", "Empréstimos"),
+    TAXAS_EMPRESA("TAXAS_EMPRESA", "Taxas PJ"),
     OUTRO("OUTRO", "Outro");
 
     @Getter
