@@ -22,6 +22,7 @@ public enum CategoriaRegistroFinanceiro {
     EDUCACAO("EDUCACAO", "Educação"),
     SERVICOS("SERVICOS", "Serviços"),
     EMPRESTIMOS("EMPRESTIMOS", "Empréstimos"),
+    CARTAO_DE_CREDITO("CARTAO_DE_CREDITO", "Cartão de Crédito"),
     TAXAS_EMPRESA("TAXAS_EMPRESA", "Taxas PJ"),
     OUTRO("OUTRO", "Outro");
 
