@@ -1,6 +1,8 @@
 package br.com.dscproject.utils;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
@@ -34,6 +36,26 @@ public final class DateUtils {
             return LocalDate.parse(dataString, formatter);
         } catch (DateTimeParseException e) {
             return null;
+        }
+    }
+
+    public static LocalDate parseData(String data) {
+        // Formato para datas no padrão "dd/MM/yyyy"
+        DateTimeFormatter formatoDataBrasil = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        // Tenta parsear no formato "dd/MM/yyyy"
+        try {
+            return LocalDate.parse(data, formatoDataBrasil);
+        } catch (DateTimeParseException e) {
+            // Se falhar, tenta parsear no formato ISO 8601 com UTC
+            try {
+                // Converte para Instant e depois para LocalDate
+                Instant instant = Instant.parse(data);
+                return instant.atZone(ZoneId.systemDefault()).toLocalDate();
+            } catch (DateTimeParseException ex) {
+                // Se ambos falharem, retorna null
+                return null;
+            }
         }
     }
 }

@@ -44,13 +44,6 @@ public class RegistroFinanceiroValidation implements ConstraintValidator<Registr
 			list.add(new FieldMessage("tipoReceitaDespesa", "O campo é obrigatório."));
 		}
 
-		if(data.getTipoRegistroFinanceiro() != null
-			&& data.getTipoRegistroFinanceiro().equals(TipoRegistroFinanceiro.DESPESA)
-			&& StringUtils.isBlank(data.getDtVencimento())
-			&& data.getQtdParcela() < 2 ){
-				list.add(new FieldMessage("qtdParcela", "A quantidade de parcelas deve maior que 1."));
-		}
-
 		if(data.getInstituicaoFinanceiraUsuarioId() == null){
 			list.add(new FieldMessage("instituicaoFinanceiraUsuarioId", "O campo é obrigatório."));
 		}

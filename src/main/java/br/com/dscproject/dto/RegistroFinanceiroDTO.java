@@ -38,6 +38,8 @@ public class RegistroFinanceiroDTO {
 
     private Long instituicaoFinanceiraUsuarioId;
 
-    private List<Long> usuariosResponsaveis = new ArrayList<Long>();
+    private Long instituicaoFinanceiraId;
+
+    private List<UsuarioResponsavelDTO> usuariosResponsaveis = new ArrayList<UsuarioResponsavelDTO>();
 
 }
