@@ -1,8 +1,8 @@
 package br.com.dscproject.controller;
 
-import br.com.dscproject.domain.Despesa;
-import br.com.dscproject.dto.DespesaDTO;
-import br.com.dscproject.services.DespesaService;
+import br.com.dscproject.domain.Receita;
+import br.com.dscproject.dto.ReceitaDTO;
+import br.com.dscproject.services.ReceitaService;
 import br.com.dscproject.services.exceptions.ObjectNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,39 +14,39 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/despesas")
-public class DespesaController {
+@RequestMapping(value = "/receitas")
+public class ReceitaController {
 
     @Autowired
-    DespesaService despesaService;
+    ReceitaService receitaService;
 
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<List<DespesaDTO>> buscarTodos(){
-        return ResponseEntity.ok().body(despesaService.buscarTodosPorUsuario());
+    public ResponseEntity<List<ReceitaDTO>> buscarTodos(){
+        return ResponseEntity.ok().body(receitaService.buscarTodosPorUsuario());
     }
 
     @RequestMapping(value="/buscar-por-id/{id}", method=RequestMethod.GET)
-    public ResponseEntity<Despesa> buscarPorId(@PathVariable Long id) throws Exception {
-        return ResponseEntity.ok().body(despesaService.buscarPorId(id));
+    public ResponseEntity<Receita> buscarPorId(@PathVariable Long id) throws Exception {
+        return ResponseEntity.ok().body(receitaService.buscarPorId(id));
     }
 
     @RequestMapping(value="/inserir", method = RequestMethod.POST)
-    public ResponseEntity<Despesa> inserir(@Valid @RequestBody DespesaDTO data){
-        Despesa registroFinanceiro = despesaService.inserir(data);
-        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(registroFinanceiro.getId()).toUri();
+    public ResponseEntity<Receita> inserir(@Valid @RequestBody ReceitaDTO data){
+        Receita receita = receitaService.inserir(data);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(receita.getId()).toUri();
         return ResponseEntity.created(uri).build();
     }
 
     @RequestMapping(value="/editar/{id}", method = RequestMethod.PUT)
-    public ResponseEntity<Despesa> editar(@Valid @RequestBody DespesaDTO data, @PathVariable Long id) throws ObjectNotFoundException {
+    public ResponseEntity<Receita> editar(@Valid @RequestBody ReceitaDTO data, @PathVariable Long id) throws ObjectNotFoundException {
         data.setId(id);
-        despesaService.editar(data);
+        receitaService.editar(data);
         return ResponseEntity.noContent().build();
     }
 
     @RequestMapping(value="/excluir/{id}", method = RequestMethod.DELETE)
     public ResponseEntity<Void> excluir(@PathVariable Long id) throws ObjectNotFoundException{
-        despesaService.excluir(id);
+        receitaService.excluir(id);
         return ResponseEntity.noContent().build();
     }
 
