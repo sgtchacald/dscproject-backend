@@ -1,6 +1,5 @@
 package br.com.dscproject.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,21 +16,21 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name="REGISTRO_FINANCEIRO_USUARIO")
+@Table(name="DESPESAS_USUARIO")
 @Audited
 @EntityListeners(AuditingEntityListener.class)
-public class RegistroFinanceiroUsuario extends AbstractAuditoria implements Serializable {
+public class DespesaUsuario extends AbstractAuditoria implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "REFU_ID")
+    @Column(name = "DEPU_ID")
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "REFI_ID", nullable = false)
-    private RegistroFinanceiro registroFinanceiro;
+    @JoinColumn(name = "DESP_ID", nullable = false)
+    private Despesa despesa;
 
     @ManyToOne
     @JoinColumn(name = "USU_ID", nullable = false)

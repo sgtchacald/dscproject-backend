@@ -37,6 +37,6 @@ public class Pagamento extends AbstractAuditoria implements Serializable {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "REFI_ID")
-    private RegistroFinanceiro registroFinanceiro;
+    private Despesa registroFinanceiro;
 
 }

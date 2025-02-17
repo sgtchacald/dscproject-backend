@@ -1,11 +1,10 @@
 package br.com.dscproject.validation;
 
 import br.com.dscproject.controller.Exception.FieldMessage;
-import br.com.dscproject.dto.RegistroFinanceiroDTO;
+import br.com.dscproject.dto.DespesaDTO;
 import br.com.dscproject.enums.TipoRegistroFinanceiro;
 import br.com.dscproject.repository.UsuarioRepository;
-import br.com.dscproject.utils.DateUtils;
-import br.com.dscproject.validation.constraints.RegistroFinanceiro;
+import br.com.dscproject.validation.constraints.Despesa;
 import io.micrometer.common.util.StringUtils;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
@@ -15,12 +14,12 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RegistroFinanceiroValidation implements ConstraintValidator<RegistroFinanceiro, RegistroFinanceiroDTO> {
+public class DespesaValidation implements ConstraintValidator<Despesa, DespesaDTO> {
 
 	@Autowired
 	private UsuarioRepository usuarioRepository;
 
-    public boolean isValid(RegistroFinanceiroDTO data, ConstraintValidatorContext context) {
+    public boolean isValid(DespesaDTO data, ConstraintValidatorContext context) {
 
 		List<FieldMessage> list = new ArrayList<>();
 
@@ -70,10 +69,10 @@ public class RegistroFinanceiroValidation implements ConstraintValidator<Registr
 				list.add(new FieldMessage("dtVencimento", "O campo é obrigatório."));
 		}
 
-		if(data.getDtVencimento() != null
+		/*if(data.getDtVencimento() != null
 				&& DateUtils.isDataMenorQueHoje(data.getDtVencimento(), "dd/MM/yyyy")){
 			list.add(new FieldMessage("dtVencimento", "A data não pode ser menor que hoje."));
-		}
+		}*/
 
 		if(list.isEmpty()){
 			return true;
