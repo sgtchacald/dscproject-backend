@@ -7,6 +7,7 @@ import br.com.dscproject.repository.*;
 import br.com.dscproject.services.exceptions.DataIntegrityException;
 import br.com.dscproject.services.exceptions.ObjectNotFoundException;
 import br.com.dscproject.utils.DateUtils;
+import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,9 @@ public class RegistroFinanceiroService {
 
     @Autowired
     private HttpServletRequest request;
+
+    @Autowired
+    private EntityManager entityManager;
 
 
     @Transactional
@@ -147,7 +151,7 @@ public class RegistroFinanceiroService {
         registroFinanceiro.setCriadoPor(usuario.getLogin());
 
         //Por fim, gravo o registro financeiro
-        registroFinanceiroRepository.save(registroFinanceiro);
+        registroFinanceiroRepository.saveAndFlush(registroFinanceiro);
 
         //Se houver usuario para divisão do registro financeiro, insere na tabela associativa REGISTRO_FINANCEIRO_USUARIO
         if(!usuarioList.isEmpty()) {
@@ -156,7 +160,7 @@ public class RegistroFinanceiroService {
                 registroFinanceiroUsuario.setRegistroFinanceiro(registroFinanceiro);
                 registroFinanceiroUsuario.setUsuario(u);
                 registroFinanceiroUsuario.setCriadoPor(usuario.getLogin());
-                registroFinanceiroUsuarioRepository.save(registroFinanceiroUsuario);
+                registroFinanceiroUsuarioRepository.saveAndFlush(registroFinanceiroUsuario);
             }
         }
 
@@ -167,34 +171,34 @@ public class RegistroFinanceiroService {
     @Transactional
     public void editar(RegistroFinanceiroDTO data) throws ObjectNotFoundException {
 
+        //Pega o usuário logado
         String loginUsuarioToken = tokenService.validarToken(tokenService.recuperarToken(request));
         Usuario usuario = usuarioRepository.findByLogin(loginUsuarioToken);
 
+        //Busca o registro Financeiro do banco e altero seus campos que não são chaves
         RegistroFinanceiro registroFinanceiroBanco = this.buscarPorId(data.getId());
 
         registroFinanceiroBanco.setDescricao(data.getDescricao());
         registroFinanceiroBanco.setValor(data.getValor());
         registroFinanceiroBanco.setTipoRegistroFinanceiro(data.getTipoRegistroFinanceiro());
         registroFinanceiroBanco.setCategoriaRegistroFinanceiro(data.getCategoriaRegistroFinanceiro());
+        registroFinanceiroBanco.setAlteradoPor(usuario.getLogin()); //Auditoria
 
         if(data.getDtVencimento() != null) {
             registroFinanceiroBanco.setDtVencimento(DateUtils.parseData(data.getDtVencimento()));
         }
 
-        Optional<InstituicaoFinanceiraUsuario> ifu  = this.instituicaoFinanceiraUsuarioRepository.findById(data.getInstituicaoFinanceiraUsuarioId());
-        if(ifu.isEmpty()){
+        //Altero Instituição Financeira do Usuario
+        Optional<InstituicaoFinanceiraUsuario> ifuBanco  = this.instituicaoFinanceiraUsuarioRepository.findById(data.getInstituicaoFinanceiraUsuarioId());
+        if(ifuBanco.isEmpty()){
             throw new ObjectNotFoundException("Não existe uma instituição financeira vinculada ao usuário com o id " + data.getInstituicaoFinanceiraUsuarioId() + ".");
         }
-
-        InstituicaoFinanceiraUsuario instituicaoFinanceiraUsuario = ifu.get();
-
+        InstituicaoFinanceiraUsuario instituicaoFinanceiraUsuario = ifuBanco.get();
         registroFinanceiroBanco.setInstituicaoFinanceiraUsuario(instituicaoFinanceiraUsuario);
 
         //Busca dados para fazer a divisão da despesa
         Set<UsuarioResponsavelDTO> usuariosResponsaveisData = new HashSet<>(Set.of()); //utilizo um [Set] para não haver registros repetidos
         usuariosResponsaveisData.addAll(data.getUsuariosResponsaveis());
-
-        //Transformo em um list para ficar melhor de manipular
         List<UsuarioResponsavelDTO> usuariosResponsaveisDataList = new ArrayList<UsuarioResponsavelDTO>(usuariosResponsaveisData);
 
         //Busco os usuarios no banco para a divisão de gastos.
@@ -207,53 +211,78 @@ public class RegistroFinanceiroService {
             .toList();
 
         //Se houver usuario para divisão do registro financeiro, insere na tabela associativa REGISTRO_FINANCEIRO_USUARIO
-        List<RegistroFinanceiroUsuario> registroFinanceiroUsuarioASalvarList = new ArrayList<RegistroFinanceiroUsuario>();
-
+        List<RegistroFinanceiroUsuario> registrosFinanceirosTelaList = new ArrayList<RegistroFinanceiroUsuario>();
         if(!usuarioList.isEmpty()) {
             for (Usuario u : usuarioList) {
+                RegistroFinanceiroUsuario rfu = registroFinanceiroUsuarioRepository.findByUsuarioAndRegistroFinanceiro(u,registroFinanceiroBanco);
+
                 RegistroFinanceiroUsuario registroFinanceiroUsuario = new RegistroFinanceiroUsuario();
+                registroFinanceiroUsuario.setId((rfu != null) ? rfu.getId() : null);
                 registroFinanceiroUsuario.setRegistroFinanceiro(registroFinanceiroBanco);
                 registroFinanceiroUsuario.setUsuario(u);
                 registroFinanceiroUsuario.setCriadoPor(usuario.getLogin());
-                registroFinanceiroUsuarioASalvarList.add(registroFinanceiroUsuario);
+                registrosFinanceirosTelaList.add(registroFinanceiroUsuario);
             }
         }
 
-        List<RegistroFinanceiroUsuario> registroFinanceiroUsuarioBancoList = registroFinanceiroUsuarioRepository.findByRegistroFinanceiro(registroFinanceiroBanco);
+        List<RegistroFinanceiroUsuario> registrosFinanceirosUsuarioBancoList = new ArrayList<>();
+        registrosFinanceirosUsuarioBancoList =  registroFinanceiroUsuarioRepository.findByRegistroFinanceiro(Optional.of(registroFinanceiroBanco));
+        List<RegistroFinanceiroUsuario> registrosFinanceirosUsuarioAExcluir = new ArrayList<>();
 
+        // Cria Lista de registrosFinanceirosUsuarios que serão excluídos
+        for (RegistroFinanceiroUsuario registroFinanceiroUsuarioBanco : registrosFinanceirosUsuarioBancoList) {
+            boolean existeNaTela = false;
 
-        // Objetos que devem ser salvos (estão em registroFinanceiroUsuarioASalvarList mas não em registroFinanceiroUsuarioBancoList)
-        List<RegistroFinanceiroUsuario> objetosASalvar = registroFinanceiroUsuarioASalvarList.stream()
-                .filter(rfu -> registroFinanceiroUsuarioBancoList.stream()
-                        .noneMatch(rfuBanco -> rfuBanco.getUsuario().equals(rfu.getUsuario())))
-                .toList();
+            for (RegistroFinanceiroUsuario registroFinanceiroTela : registrosFinanceirosTelaList) {
+                if (registroFinanceiroTela.getId().equals(registroFinanceiroUsuarioBanco.getId())) {
+                    existeNaTela = true;
+                    break; // Sai do loop se encontrar o ID
+                }
+            }
 
-        // Objetos que devem ser excluídos (estão em registroFinanceiroUsuarioBancoList mas não em registroFinanceiroUsuarioASalvarList)
-        List<RegistroFinanceiroUsuario> objetosAExcluir = registroFinanceiroUsuarioBancoList.stream()
-                .filter(rfuBanco -> registroFinanceiroUsuarioASalvarList.stream()
-                        .noneMatch(rfu -> rfu.getUsuario().equals(rfuBanco.getUsuario())))
-                .toList();
-
-        //Seta Auditoria
-        registroFinanceiroBanco.setAlteradoPor(usuario.getLogin());
-
-        //Seta os usuarios que serão salvos
-        registroFinanceiroBanco.getUsuariosResponsaveis().clear();
+            if (!existeNaTela) {
+                registrosFinanceirosUsuarioAExcluir.add(registroFinanceiroUsuarioBanco);
+            }
+        }
 
         //Por fim, gravo o registro financeiro
-        registroFinanceiroRepository.save(registroFinanceiroBanco);
+        registroFinanceiroRepository.saveAndFlush(registroFinanceiroBanco);
 
         // Agora você pode salvar os objetos que precisam ser salvos
-        registroFinanceiroUsuarioRepository.saveAll(objetosASalvar);
+        if(!registrosFinanceirosTelaList.isEmpty()){
+           registroFinanceiroUsuarioRepository.saveAllAndFlush(registrosFinanceirosTelaList);
+        }
 
         // E excluir os objetos que precisam ser excluídos
-        registroFinanceiroUsuarioRepository.deleteAll(objetosAExcluir);
+        if(!registrosFinanceirosUsuarioAExcluir.isEmpty()){
+            for (RegistroFinanceiroUsuario rfue : registrosFinanceirosUsuarioAExcluir){
+                if(rfue.getRegistroFinanceiro().getId() != null && rfue.getUsuario().getId() != null && rfue.getId() != null){
+                    registroFinanceiroUsuarioRepository.deleteById(rfue.getId());
+                }
+            }
+        }
 
     }
 
     public void excluir(Long id) throws ObjectNotFoundException {
-        this.buscarPorId(id);
+        Optional<RegistroFinanceiro> registroFinanceiro = registroFinanceiroRepository.findById(id);
+
+
+        List<RegistroFinanceiroUsuario> registrosFinanceirosUsuarioList = new ArrayList<>();
+
+        if(registroFinanceiro.isPresent()){
+            registrosFinanceirosUsuarioList = registroFinanceiroUsuarioRepository.findByRegistroFinanceiro(registroFinanceiro);
+        }
+
         try {
+            //exclui os filhos
+            if(!registrosFinanceirosUsuarioList.isEmpty()){
+                for(RegistroFinanceiroUsuario refiu : registrosFinanceirosUsuarioList){
+                    registroFinanceiroUsuarioRepository.deleteById(refiu.getId());
+                }
+            }
+
+            //exclui o pai
             registroFinanceiroRepository.deleteById(id);
         } catch (DataIntegrityViolationException e) {
             throw new DataIntegrityException("Não foi possível excluir este registro pois existem registros vinculados a ele.");

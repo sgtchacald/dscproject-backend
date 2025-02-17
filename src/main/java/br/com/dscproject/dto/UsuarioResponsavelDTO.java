@@ -20,11 +20,14 @@ public class UsuarioResponsavelDTO {
 
     private String email;
 
-    public UsuarioResponsavelDTO(Long id, String nome, String login, String email) {
+    private String genero;
+
+    public UsuarioResponsavelDTO(Long id, String nome, String login, String email, String genero) {
         this.id = id;
         this.nome = nome;
         this.login = login;
         this.email = email;
+        this.genero = genero;
     }
 
 }

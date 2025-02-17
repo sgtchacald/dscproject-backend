@@ -1,6 +1,7 @@
 package br.com.dscproject.repository;
 
 import br.com.dscproject.domain.Usuario;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.history.RevisionRepository;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UsuarioRepository extends RevisionRepository<Usuario, Long, Long>,CrudRepository<Usuario, Long> {
+public interface UsuarioRepository extends RevisionRepository<Usuario, Long, Long>, JpaRepository<Usuario, Long> {
     UserDetails findByLoginOrEmail(String login, String email);
 
     @NonNull
