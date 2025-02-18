@@ -16,6 +16,8 @@ public class DespesaDTO {
 
     private Long id;
 
+    private String competencia;
+
     private String nome;
 
     private String descricao;

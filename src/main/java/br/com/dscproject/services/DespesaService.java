@@ -177,6 +177,7 @@ public class DespesaService {
         //Busca o registro Financeiro do banco e altero seus campos que não são chaves
         Despesa despesaBanco = this.buscarPorId(data.getId());
 
+        despesaBanco.setCompetencia(data.getCompetencia());
         despesaBanco.setNome(data.getNome());
         despesaBanco.setDescricao(data.getDescricao());
         despesaBanco.setValor(data.getValor());

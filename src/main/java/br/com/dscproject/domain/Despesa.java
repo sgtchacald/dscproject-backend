@@ -35,6 +35,9 @@ public class Despesa extends AbstractAuditoria implements Serializable {
     @Column(name = "DESP_ID", nullable = false)
     private Long id;
 
+    @Column(name = "DESP_COMPETENCIA", length = 7, nullable = false)
+    private String competencia="0000-00";
+
     @Column(name = "DESP_NOME", length = 100, nullable = false)
     private String nome;
 
@@ -60,7 +63,6 @@ public class Despesa extends AbstractAuditoria implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column(name = "DESP_TIPO_RECEITA_DESPESA", nullable = true)
     private CategoriaRegistroFinanceiro categoriaRegistroFinanceiro;
-
 
     @Enumerated(EnumType.STRING)
     @Column(name = "DESP_IND_STATUS_PAGAMENTO", nullable = true)
