@@ -29,6 +29,9 @@ public class Receita extends AbstractAuditoria implements Serializable {
     @Column(name = "RECE_ID", nullable = false)
     private Long id;
 
+    @Column(name = "RECE_COMPETENCIA", length = 100, nullable = false)
+    private String competencia;
+
     @Column(name = "RECE_NOME", length = 100, nullable = false)
     private String nome;
 

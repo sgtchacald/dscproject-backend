@@ -15,6 +15,8 @@ public class ReceitaDTO {
 
     private Long id;
 
+    private String competencia;
+
     private String nome;
 
     private String descricao;

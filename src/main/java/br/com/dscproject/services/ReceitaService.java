@@ -117,6 +117,7 @@ public class ReceitaService {
         //Busca o registro Financeiro do banco e altero seus campos que não são chaves
         Receita receitaBanco = this.buscarPorId(data.getId());
 
+        receitaBanco.setCompetencia(data.getCompetencia());
         receitaBanco.setNome(data.getNome());
         receitaBanco.setDescricao(data.getDescricao());
         receitaBanco.setValor(data.getValor());
