@@ -16,8 +16,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.*;
+
+import static java.lang.Integer.valueOf;
 
 @Service
 @Slf4j
@@ -149,6 +153,13 @@ public class DespesaService {
         //Seta Auditoria
         despesa.setCriadoPor(usuario.getLogin());
 
+        BigDecimal valorParcela = new BigDecimal("0.00");
+
+        if(despesa.isExisteParcela()){
+            valorParcela = despesa.getValorParcelado().divide(new BigDecimal(despesa.getQtdParcela()), 2, RoundingMode.UNNECESSARY);
+            despesa.setValor(valorParcela);
+        }
+
         //Por fim, gravo a despesa
         despesaRepository.saveAndFlush(despesa);
 
@@ -163,8 +174,68 @@ public class DespesaService {
             }
         }
 
+        //Aplicando as parcelas para outras competências
+        List<Despesa> despesaParcelaList = new ArrayList<Despesa>();
+
+        if(despesa.isExisteParcela()){
+            despesaParcelaList.add(despesa);
+
+            for (int i = 1; i <= despesa.getQtdParcela(); i++) {
+                if(i != 1){
+                    //Cria uma nova despesa de arcordo com a
+                    Despesa despesaParcelada = new Despesa();
+                    BeanUtils.copyProperties(despesa, despesaParcelada);
+
+                    despesaParcelada.setId(null);
+                    despesaParcelada.setCompetencia(gerarNovaCompetencia(despesaParcelaList));
+                    despesaParcelada.setDtVencimento(despesaParcelaList.getLast().getDtVencimento().plusMonths(1));
+                    despesaParcelada.setExisteParcela(true);
+                    despesaParcelada.setIdParcelaPai(despesa.getId());
+                    despesaParcelada.setNrParcela(i);
+                    despesaParcelada.setQtdParcela(despesa.getQtdParcela());
+
+                    despesaParcelada.setValorParcelado(despesa.getValorParcelado());
+                    despesaParcelada.setValor(valorParcela);
+
+                    despesaParcelada.setUsuariosResponsaveis(usuarioList);
+
+                    //cria a despesa parcelada para as competências posteriores
+                    //Por fim, gravo a despesa que foi clonada e reajustada
+                    despesaRepository.saveAndFlush(despesaParcelada);
+
+                    //Se houver usuario para divisão da despesa, insere na tabela associativa REGISTRO_FINANCEIRO_USUARIO
+                    if(!usuarioList.isEmpty()) {
+                        for (Usuario u : usuarioList) {
+                            DespesaUsuario despesaUsuario = new DespesaUsuario();
+                            despesaUsuario.setDespesa(despesaParcelada);
+                            despesaUsuario.setUsuario(u);
+                            despesaUsuario.setCriadoPor(usuario.getLogin());
+                            despesaUsuarioRepository.saveAndFlush(despesaUsuario);
+                        }
+                    }
+
+                    despesaParcelaList.add(despesaParcelada);
+                }
+            }
+        }
+
         //Retorno a despesa
         return despesa;
+    }
+
+    private static String gerarNovaCompetencia(List<Despesa> despesaParcelaList) {
+        String[] competenciaSplit = despesaParcelaList.getLast().getCompetencia().split("-");
+        int anoCompetencia = Integer.parseInt(competenciaSplit[0]);
+        int mesCompetencia = Integer.parseInt(competenciaSplit[1]);
+        boolean mesCompetenciaAtualEhDezembro = mesCompetencia == 12;
+
+        //Gerando a nova competência
+        String competenciaStr = "";
+        competenciaStr += mesCompetenciaAtualEhDezembro ? String.valueOf(anoCompetencia + 1) : anoCompetencia;
+        competenciaStr += "-";
+        competenciaStr += (mesCompetencia + 1) < 10 ? "0" : "";
+        competenciaStr += mesCompetenciaAtualEhDezembro ? String.valueOf(1) : mesCompetencia + 1;
+        return competenciaStr;
     }
 
     @Transactional

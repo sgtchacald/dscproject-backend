@@ -27,7 +27,7 @@ public class DespesaValidation implements ConstraintValidator<Despesa, DespesaDT
 			list.add(new FieldMessage("descricao", "O campo é obrigatório."));
 		}
 
-		if(data.getValor() == null){
+		if(!data.isExisteParcela() && data.getValor() == null){
 			list.add(new FieldMessage("valor", "O campo é obrigatório."));
 		}
 

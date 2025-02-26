@@ -46,6 +46,7 @@ public class WebSecurityConfig {
                     .requestMatchers(HttpMethod.POST, PUBLIC_MATCHERS_POST).permitAll()
                     .requestMatchers(HttpMethod.PUT, PUBLIC_MATCHERS_PUT).permitAll()
                     .requestMatchers(HttpMethod.DELETE, PUBLIC_MATCHERS_DELETE).permitAll()
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     .anyRequest()
                     .authenticated()
             )

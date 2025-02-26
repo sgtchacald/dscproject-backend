@@ -32,8 +32,8 @@ public class DespesaController {
 
     @RequestMapping(value="/inserir", method = RequestMethod.POST)
     public ResponseEntity<Despesa> inserir(@Valid @RequestBody DespesaDTO data){
-        Despesa registroFinanceiro = despesaService.inserir(data);
-        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(registroFinanceiro.getId()).toUri();
+        Despesa despesa = despesaService.inserir(data);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(despesa.getId()).toUri();
         return ResponseEntity.created(uri).build();
     }
 

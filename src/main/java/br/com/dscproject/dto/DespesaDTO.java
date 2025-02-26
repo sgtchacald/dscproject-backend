@@ -4,6 +4,7 @@ import br.com.dscproject.enums.CategoriaRegistroFinanceiro;
 import br.com.dscproject.enums.StatusPagamento;
 import br.com.dscproject.enums.TipoRegistroFinanceiro;
 import br.com.dscproject.validation.constraints.Despesa;
+import jakarta.persistence.Column;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -24,13 +25,19 @@ public class DespesaDTO {
 
     private BigDecimal valor;
 
-    private int qtdParcela;
-
     private String dtVencimento;
 
     private String dtLancamento;
 
-    //private int diaVencimento;
+    private boolean existeParcela;
+
+    private Long idParcelaPai;
+
+    private int nrParcela;
+
+    private int qtdParcela;
+
+    private BigDecimal valorParcelado;
 
     private CategoriaRegistroFinanceiro categoriaRegistroFinanceiro;
 

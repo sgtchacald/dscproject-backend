@@ -22,8 +22,8 @@ public class CorsFilter implements Filter {
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-            throws IOException, ServletException {
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+
         HttpServletResponse res = (HttpServletResponse) response;
         HttpServletRequest req = (HttpServletRequest) request;
 
@@ -42,5 +42,6 @@ public class CorsFilter implements Filter {
         }
 
         chain.doFilter(request, response);
+
     }
 }

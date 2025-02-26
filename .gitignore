@@ -1,3 +1,5 @@
 /target/
 /.idea/
 /log-dscproject-backend.log
+/out/artifacts/dscproject_jar/dscproject.jar
+/src/main/resources/META-INF/MANIFEST.MF
