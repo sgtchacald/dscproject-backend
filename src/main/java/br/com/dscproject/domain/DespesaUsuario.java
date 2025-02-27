@@ -10,6 +10,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -35,5 +36,8 @@ public class DespesaUsuario extends AbstractAuditoria implements Serializable {
     @ManyToOne
     @JoinColumn(name = "USU_ID", nullable = false)
     private Usuario usuario;
+
+    @Column(name = "DEPU_VALOR", nullable = true)
+    private BigDecimal valor;
 
 }

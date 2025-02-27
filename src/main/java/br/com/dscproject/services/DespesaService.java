@@ -140,12 +140,17 @@ public class DespesaService {
 
         //Busco os usuarios no banco para a divisão de gastos.
         List<Usuario> usuarioList = usuariosResponsaveisDataList
-            .stream()
-            .map(u -> usuarioRepository
-                    .findById(u.getId())
-                    .orElseThrow(() -> new ObjectNotFoundException("Não foi possível encontrar o usuário com o id " + usuario.getId() + "."))
-                )
-            .toList();
+                .stream()
+                .map(u -> {
+                    Usuario uStream = usuarioRepository
+                            .findById(u.getId())
+                            .orElseThrow(() -> new ObjectNotFoundException("Não foi possível encontrar o usuário com o id " + u.getId() + "."));
+
+                    uStream.setValorDividido(u.getValorDividido());
+
+                    return uStream;
+                })
+                .toList();
 
         //Adiciono os usuarios responsáveis na lista
         //despesa.setUsuariosResponsaveis(usuarioList);
@@ -160,6 +165,26 @@ public class DespesaService {
             despesa.setValor(valorParcela);
         }
 
+        if(!usuarioList.isEmpty()){
+            BigDecimal valorTotalADividir = new BigDecimal("0.00");
+            BigDecimal valorASubtrair = new BigDecimal("0.00");
+            for (Usuario u : usuarioList) {
+                if(u.getValorDividido() != null){
+                    valorTotalADividir = valorTotalADividir.add(u.getValorDividido());
+                }
+
+                if(u.getId() != usuario.getId()){
+                    valorASubtrair = valorASubtrair.add(u.getValorDividido());
+                }
+            }
+
+            despesa.setValorTotalADividir(valorTotalADividir);
+
+            if((valorTotalADividir.subtract(valorASubtrair)).compareTo(BigDecimal.ZERO) > 0) {
+                despesa.setValor(valorTotalADividir.subtract(valorASubtrair));
+            }
+        }
+
         //Por fim, gravo a despesa
         despesaRepository.saveAndFlush(despesa);
 
@@ -170,6 +195,7 @@ public class DespesaService {
                 despesaUsuario.setDespesa(despesa);
                 despesaUsuario.setUsuario(u);
                 despesaUsuario.setCriadoPor(usuario.getLogin());
+                despesaUsuario.setValor(u.getValorDividido());
                 despesaUsuarioRepository.saveAndFlush(despesaUsuario);
             }
         }

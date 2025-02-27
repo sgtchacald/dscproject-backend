@@ -23,8 +23,6 @@ public class DespesaDTO {
 
     private String descricao;
 
-    private BigDecimal valor;
-
     private String dtVencimento;
 
     private String dtLancamento;
@@ -38,6 +36,10 @@ public class DespesaDTO {
     private int qtdParcela;
 
     private BigDecimal valorParcelado;
+
+    private BigDecimal valorTotalADividir;
+
+    private BigDecimal valor;
 
     private CategoriaRegistroFinanceiro categoriaRegistroFinanceiro;
 

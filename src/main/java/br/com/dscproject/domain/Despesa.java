@@ -44,9 +44,6 @@ public class Despesa extends AbstractAuditoria implements Serializable {
     @Column(name = "DESP_DESCRICAO", length = 512, nullable = false)
     private String descricao;
 
-    @Column(name = "DESP_VALOR", nullable = true)
-    private BigDecimal valor;
-
     @Column(name = "DESP_DT_LANCAMENTO", nullable = false)
     private Instant dtLancamento;
 
@@ -67,6 +64,12 @@ public class Despesa extends AbstractAuditoria implements Serializable {
 
     @Column(name = "DESP_VALOR_PARCELADO", nullable = true)
     private BigDecimal valorParcelado;
+
+    @Column(name = "DESP_VALOR_TOTAL_A_DIVIDIR", nullable = true)
+    private BigDecimal valorTotalADividir;
+
+    @Column(name = "DESP_VALOR", nullable = true)
+    private BigDecimal valor;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "DESP_TIPO_TRANSACAO", nullable = false)

@@ -12,7 +12,7 @@ import java.util.Set;
 @Repository
 public interface DespesaRepository extends JpaRepository<Despesa, Long> {
 
-    @Query("SELECT new br.com.dscproject.dto.UsuarioResponsavelDTO(u.id, u.nome, u.login, u.email, u.genero) " +
+    @Query("SELECT new br.com.dscproject.dto.UsuarioResponsavelDTO(u.id, u.nome, u.login, u.email, u.genero, du.valor)" +
             "FROM Usuario u " +
             "JOIN DespesaUsuario du ON u.id = du.usuario.id " +
             "WHERE du.despesa.id = :despesaId")

@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.*;
 
 @Data @NoArgsConstructor @AllArgsConstructor
@@ -57,6 +58,9 @@ public class Usuario extends AbstractAuditoria implements Serializable, UserDeta
 
     @Transient
     private List<Pagamento> pagamentos;
+
+    @Transient
+    BigDecimal valorDividido;
 
     public Genero getGenero() {
         return Genero.toEnum(genero);

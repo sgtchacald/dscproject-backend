@@ -9,6 +9,8 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
 import org.hibernate.validator.constraints.Length;
 
+import java.math.BigDecimal;
+
 @Data
 public class UsuarioResponsavelDTO {
 
@@ -22,12 +24,15 @@ public class UsuarioResponsavelDTO {
 
     private String genero;
 
-    public UsuarioResponsavelDTO(Long id, String nome, String login, String email, String genero) {
+    private BigDecimal valorDividido;
+
+    public UsuarioResponsavelDTO(Long id, String nome, String login, String email, String genero, BigDecimal valorDividido) {
         this.id = id;
         this.nome = nome;
         this.login = login;
         this.email = email;
         this.genero = genero;
+        this.valorDividido = valorDividido;
     }
 
 }
