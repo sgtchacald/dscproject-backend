@@ -79,6 +79,10 @@ public class DespesaService {
                 dto.setDtVencimento(despesa.getDtVencimento().toString());
             }
 
+            if(despesa.isExisteParcela()){
+                dto.setValor(despesa.getValorTotalADividir());
+            }
+
             Set<UsuarioResponsavelDTO> usuariosResponsaveis = new HashSet<UsuarioResponsavelDTO>();
             if(despesa.getId() != null) {
                 usuariosResponsaveis = despesaRepository.findUsuariosByDespesaId(despesa.getId());
@@ -160,8 +164,8 @@ public class DespesaService {
 
         BigDecimal valorParcela = new BigDecimal("0.00");
 
-        if(despesa.isExisteParcela()){
-            valorParcela = despesa.getValorParcelado().divide(new BigDecimal(despesa.getQtdParcela()), 2, RoundingMode.UNNECESSARY);
+        if (despesa.isExisteParcela()) {
+            valorParcela = despesa.getValorParcelado().divide(new BigDecimal(despesa.getQtdParcela()), 2, RoundingMode.HALF_UP);
             despesa.setValor(valorParcela);
         }
 
@@ -173,12 +177,14 @@ public class DespesaService {
                     valorTotalADividir = valorTotalADividir.add(u.getValorDividido());
                 }
 
-                if(u.getId() != usuario.getId()){
+                if(!Objects.equals(u.getId(), usuario.getId())){
                     valorASubtrair = valorASubtrair.add(u.getValorDividido());
                 }
             }
 
             despesa.setValorTotalADividir(valorTotalADividir);
+
+            despesa.setValorParcelado(valorTotalADividir);
 
             if((valorTotalADividir.subtract(valorASubtrair)).compareTo(BigDecimal.ZERO) > 0) {
                 despesa.setValor(valorTotalADividir.subtract(valorASubtrair));
