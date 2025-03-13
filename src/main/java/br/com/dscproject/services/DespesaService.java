@@ -67,6 +67,7 @@ public class DespesaService {
             BeanUtils.copyProperties(despesa, dto);
 
             //Seta a instituição financeira usuario e a instituicao do usuario
+            dto.setInstituicaoFinanceira(despesa.getInstituicaoFinanceiraUsuario().getInstituicaoFinanceira().getNome());
             dto.setInstituicaoFinanceiraUsuarioId(despesa.getInstituicaoFinanceiraUsuario().getId());
             dto.setInstituicaoFinanceiraId(despesa.getInstituicaoFinanceiraUsuario().getInstituicaoFinanceira().getId());
 
@@ -78,7 +79,7 @@ public class DespesaService {
                 dto.setDtVencimento(despesa.getDtVencimento().toString());
             }
 
-            if(despesa.isExisteParcela()){
+            if(despesa.isExisteParcela() && despesa.getValorTotalADividir().compareTo(BigDecimal.ZERO) > 0) {
                 dto.setValor(despesa.getValorTotalADividir());
             }
 

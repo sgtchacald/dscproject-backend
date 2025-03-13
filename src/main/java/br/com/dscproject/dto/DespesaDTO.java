@@ -47,9 +47,11 @@ public class DespesaDTO {
 
     private StatusPagamento statusPagamento;
 
+    private Long instituicaoFinanceiraId;
+
     private Long instituicaoFinanceiraUsuarioId;
 
-    private Long instituicaoFinanceiraId;
+    private String instituicaoFinanceira;
 
     private List<UsuarioResponsavelDTO> usuariosResponsaveis = new ArrayList<UsuarioResponsavelDTO>();
 
