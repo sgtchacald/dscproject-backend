@@ -60,7 +60,7 @@ public class DespesaService {
         List<DespesaDTO> despesaDTOList = new ArrayList<>();
 
         List<Despesa> despesaList = new ArrayList<>();
-        despesaList = despesaRepositoryCustom.buscarDespesaPorUsuario(usuario);
+        despesaList = despesaRepository.findDespesasByUsuarioId(usuario.getId());
 
         for (Despesa despesa : despesaList) {
             DespesaDTO dto = new DespesaDTO();
@@ -69,7 +69,6 @@ public class DespesaService {
             //Seta a instituição financeira usuario e a instituicao do usuario
             dto.setInstituicaoFinanceiraUsuarioId(despesa.getInstituicaoFinanceiraUsuario().getId());
             dto.setInstituicaoFinanceiraId(despesa.getInstituicaoFinanceiraUsuario().getInstituicaoFinanceira().getId());
-
 
             if(despesa.getDtLancamento() != null) {
                 dto.setDtLancamento(despesa.getDtLancamento().toString());
@@ -133,7 +132,6 @@ public class DespesaService {
         despesa.setInstituicaoFinanceiraUsuario(instituicaoFinanceiraUsuario);
 
         despesa.setStatusPagamento(data.getStatusPagamento());
-
 
         //Busca dados para fazer a divisão da despesa
         Set<UsuarioResponsavelDTO> usuariosResponsaveisData = new HashSet<>(Set.of()); //utilizo um [Set] para não haver registros repetidos
@@ -286,6 +284,7 @@ public class DespesaService {
         despesaBanco.setValor(data.getValor());
         despesaBanco.setTipoRegistroFinanceiro(data.getTipoRegistroFinanceiro());
         despesaBanco.setCategoriaRegistroFinanceiro(data.getCategoriaRegistroFinanceiro());
+        despesaBanco.setStatusPagamento(data.getStatusPagamento());
         despesaBanco.setAlteradoPor(usuario.getLogin()); //Auditoria
 
         if(data.getDtVencimento() != null) {
@@ -307,12 +306,17 @@ public class DespesaService {
 
         //Busco os usuarios no banco para a divisão de gastos.
         List<Usuario> usuarioList = usuariosResponsaveisDataList
-            .stream()
-            .map(u -> usuarioRepository
-                    .findById(u.getId())
-                    .orElseThrow(() -> new ObjectNotFoundException("Não foi possível encontrar o usuário com o id " + usuario.getId() + "."))
-            )
-            .toList();
+                .stream()
+                .map(u -> {
+                    Usuario uStream = usuarioRepository
+                            .findById(u.getId())
+                            .orElseThrow(() -> new ObjectNotFoundException("Não foi possível encontrar o usuário com o id " + u.getId() + "."));
+
+                    uStream.setValorDividido(u.getValorDividido());
+
+                    return uStream;
+                })
+                .toList();
 
         //Se houver usuario para divisão da despesa, insere na tabela associativa REGISTRO_FINANCEIRO_USUARIO
         List<DespesaUsuario> registrosFinanceirosTelaList = new ArrayList<DespesaUsuario>();
@@ -324,8 +328,16 @@ public class DespesaService {
                 despesaUsuario.setId((rfu != null) ? rfu.getId() : null);
                 despesaUsuario.setDespesa(despesaBanco);
                 despesaUsuario.setUsuario(u);
+                despesaUsuario.setValor(u.getValorDividido());
                 despesaUsuario.setCriadoPor(usuario.getLogin());
+
+                if(despesaUsuario.getId() == null) { //trata-se do usuaario adicionando uma divisão para uma despesa sem parcela
+                    despesaUsuarioRepository.saveAndFlush(despesaUsuario);
+                }
+
                 registrosFinanceirosTelaList.add(despesaUsuario);
+
+
             }
         }
 
@@ -338,9 +350,11 @@ public class DespesaService {
             boolean existeNaTela = false;
 
             for (DespesaUsuario despesaTela : registrosFinanceirosTelaList) {
-                if (despesaTela.getId().equals(despesaUsuarioBanco.getId())) {
-                    existeNaTela = true;
-                    break; // Sai do loop se encontrar o ID
+                if(despesaTela.getDespesa() != null && despesaUsuarioBanco.getId() != null){
+                    if (despesaTela.getId().equals(despesaUsuarioBanco.getId())) {
+                        existeNaTela = true;
+                        break; // Sai do loop se encontrar o ID
+                    }
                 }
             }
 
