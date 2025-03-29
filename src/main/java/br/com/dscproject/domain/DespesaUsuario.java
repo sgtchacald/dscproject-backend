@@ -1,5 +1,6 @@
 package br.com.dscproject.domain;
 
+import br.com.dscproject.enums.StatusPagamento;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -39,5 +40,8 @@ public class DespesaUsuario extends AbstractAuditoria implements Serializable {
 
     @Column(name = "DEPU_VALOR", nullable = true)
     private BigDecimal valor;
+
+    @Column(name = "DEPU_IND_STATUS_PAGAMENTO", nullable = false)
+    private boolean statusPagamento = false;
 
 }

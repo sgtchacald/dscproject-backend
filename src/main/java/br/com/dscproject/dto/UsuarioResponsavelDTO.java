@@ -26,13 +26,16 @@ public class UsuarioResponsavelDTO {
 
     private BigDecimal valorDividido;
 
-    public UsuarioResponsavelDTO(Long id, String nome, String login, String email, String genero, BigDecimal valorDividido) {
+    private boolean statusPagamento;
+
+    public UsuarioResponsavelDTO(Long id, String nome, String login, String email, String genero, BigDecimal valorDividido, boolean statusPagamento) {
         this.id = id;
         this.nome = nome;
         this.login = login;
         this.email = email;
         this.genero = genero;
         this.valorDividido = valorDividido;
+        this.statusPagamento = statusPagamento;
     }
 
 }

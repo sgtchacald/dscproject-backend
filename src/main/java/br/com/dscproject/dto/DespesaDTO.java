@@ -55,4 +55,6 @@ public class DespesaDTO {
 
     private List<UsuarioResponsavelDTO> usuariosResponsaveis = new ArrayList<UsuarioResponsavelDTO>();
 
+    private boolean existeDivisao;
+
 }

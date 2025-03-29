@@ -92,8 +92,11 @@ public class DespesaService {
                 for (UsuarioResponsavelDTO usuarioResponsavel : usuariosResponsaveis) {
                   dto.getUsuariosResponsaveis().add(usuarioResponsavel);
                 }
-            }
 
+                if(usuariosResponsaveis.size() > 1) {
+                    dto.setExisteDivisao(true);
+                }
+            }
 
             despesaDTOList.add(dto);
         }
@@ -117,7 +120,9 @@ public class DespesaService {
         Despesa despesa  = new Despesa();
         BeanUtils.copyProperties(data, despesa);
 
-        despesa.setDtLancamento(Instant.now());
+        if(data.getDtVencimento() != null) {
+        despesa.setDtLancamento(DateUtils.retornaLocalDate(data.getDtLancamento(), "dd/MM/yyyy"));
+        }
 
         if(data.getDtVencimento() != null) {
             despesa.setDtVencimento(DateUtils.retornaLocalDate(data.getDtVencimento(), "dd/MM/yyyy"));
@@ -201,6 +206,7 @@ public class DespesaService {
                 despesaUsuario.setUsuario(u);
                 despesaUsuario.setCriadoPor(usuario.getLogin());
                 despesaUsuario.setValor(u.getValorDividido());
+                despesaUsuario.setStatusPagamento(false);
                 despesaUsuarioRepository.saveAndFlush(despesaUsuario);
             }
         }
@@ -330,6 +336,7 @@ public class DespesaService {
                 despesaUsuario.setDespesa(despesaBanco);
                 despesaUsuario.setUsuario(u);
                 despesaUsuario.setValor(u.getValorDividido());
+                despesaUsuario.setStatusPagamento(u.isStatusPagamento());
                 despesaUsuario.setCriadoPor(usuario.getLogin());
 
                 if(despesaUsuario.getId() == null) { //trata-se do usuaario adicionando uma divisão para uma despesa sem parcela
@@ -337,8 +344,6 @@ public class DespesaService {
                 }
 
                 registrosFinanceirosTelaList.add(despesaUsuario);
-
-
             }
         }
 

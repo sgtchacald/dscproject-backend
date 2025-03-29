@@ -57,10 +57,10 @@ public class Usuario extends AbstractAuditoria implements Serializable, UserDeta
     private Perfis perfil;
 
     @Transient
-    private List<Pagamento> pagamentos;
+    BigDecimal valorDividido;
 
     @Transient
-    BigDecimal valorDividido;
+    boolean statusPagamento = false;
 
     public Genero getGenero() {
         return Genero.toEnum(genero);
