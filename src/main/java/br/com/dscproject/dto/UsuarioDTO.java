@@ -36,7 +36,6 @@ public class UsuarioDTO {
 
     private Perfis perfil;
 
-
     public UsuarioDTO(Usuario usuario) {
         this.id     = usuario.getId();
         this.nome   = usuario.getNome();

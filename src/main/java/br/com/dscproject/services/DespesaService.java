@@ -3,6 +3,7 @@ package br.com.dscproject.services;
 import br.com.dscproject.domain.*;
 import br.com.dscproject.dto.DespesaDTO;
 import br.com.dscproject.dto.UsuarioResponsavelDTO;
+import br.com.dscproject.enums.StatusPagamento;
 import br.com.dscproject.repository.*;
 import br.com.dscproject.services.exceptions.DataIntegrityException;
 import br.com.dscproject.services.exceptions.ObjectNotFoundException;
@@ -55,12 +56,12 @@ public class DespesaService {
     @Transactional
     public List<DespesaDTO> buscarTodosPorUsuario() {
         String loginUsuarioToken = tokenService.validarToken(tokenService.recuperarToken(request));
-        Usuario usuario = usuarioRepository.findByLogin(loginUsuarioToken);
+        Usuario usuarioLogado = usuarioRepository.findByLogin(loginUsuarioToken);
 
         List<DespesaDTO> despesaDTOList = new ArrayList<>();
 
         List<Despesa> despesaList = new ArrayList<>();
-        despesaList = despesaRepository.findDespesasByUsuarioId(usuario.getId());
+        despesaList = despesaRepository.findDespesasByUsuarioId(usuarioLogado.getId());
 
         for (Despesa despesa : despesaList) {
             DespesaDTO dto = new DespesaDTO();
@@ -79,10 +80,6 @@ public class DespesaService {
                 dto.setDtVencimento(despesa.getDtVencimento().toString());
             }
 
-            if(despesa.isExisteParcela() && despesa.getValorTotalADividir().compareTo(BigDecimal.ZERO) > 0) {
-                dto.setValor(despesa.getValorTotalADividir());
-            }
-
             Set<UsuarioResponsavelDTO> usuariosResponsaveis = new HashSet<UsuarioResponsavelDTO>();
             if(despesa.getId() != null) {
                 usuariosResponsaveis = despesaRepository.findUsuariosByDespesaId(despesa.getId());
@@ -90,12 +87,21 @@ public class DespesaService {
 
             if(!usuariosResponsaveis.isEmpty()){
                 for (UsuarioResponsavelDTO usuarioResponsavel : usuariosResponsaveis) {
+                  if(usuarioResponsavel.getId().equals(usuarioLogado.getId())){
+                      usuarioResponsavel.setNome("Minha Cota");
+                      usuarioResponsavel.setLogado(true);
+
+                      if(usuarioResponsavel.getValorDividido() != null){
+                          dto.setValorDividido(usuarioResponsavel.getValorDividido());
+                      }
+                  }
                   dto.getUsuariosResponsaveis().add(usuarioResponsavel);
                 }
 
                 if(usuariosResponsaveis.size() > 1) {
                     dto.setExisteDivisao(true);
                 }
+
             }
 
             despesaDTOList.add(dto);
@@ -115,17 +121,17 @@ public class DespesaService {
 
     public Despesa inserir(DespesaDTO data) {
         String loginUsuarioToken = tokenService.validarToken(tokenService.recuperarToken(request));
-        Usuario usuario = usuarioRepository.findByLogin(loginUsuarioToken);
+        Usuario usuarioLogado = usuarioRepository.findByLogin(loginUsuarioToken);
 
         Despesa despesa  = new Despesa();
         BeanUtils.copyProperties(data, despesa);
 
-        if(data.getDtVencimento() != null) {
-        despesa.setDtLancamento(DateUtils.retornaLocalDate(data.getDtLancamento(), "dd/MM/yyyy"));
+        if(data.getDtLancamento() != null) {
+            despesa.setDtLancamento(DateUtils.retornaLocalDate(data.getDtLancamento(), "yyyy-MM-dd"));
         }
 
         if(data.getDtVencimento() != null) {
-            despesa.setDtVencimento(DateUtils.retornaLocalDate(data.getDtVencimento(), "dd/MM/yyyy"));
+            despesa.setDtVencimento(DateUtils.retornaLocalDate(data.getDtVencimento(), "yyyy-MM-dd"));
         }
 
         Optional<InstituicaoFinanceiraUsuario> ifu  = this.instituicaoFinanceiraUsuarioRepository.findById(data.getInstituicaoFinanceiraUsuarioId());
@@ -137,7 +143,7 @@ public class DespesaService {
 
         despesa.setInstituicaoFinanceiraUsuario(instituicaoFinanceiraUsuario);
 
-        despesa.setStatusPagamento(data.getStatusPagamento());
+        despesa.setStatusPagamento(StatusPagamento.NAO);
 
         //Busca dados para fazer a divisão da despesa
         Set<UsuarioResponsavelDTO> usuariosResponsaveisData = new HashSet<>(Set.of()); //utilizo um [Set] para não haver registros repetidos
@@ -160,39 +166,12 @@ public class DespesaService {
                 })
                 .toList();
 
-        //Adiciono os usuarios responsáveis na lista
-        //despesa.setUsuariosResponsaveis(usuarioList);
-
         //Seta Auditoria
-        despesa.setCriadoPor(usuario.getLogin());
+        despesa.setCriadoPor(usuarioLogado.getLogin());
 
-        BigDecimal valorParcela = new BigDecimal("0.00");
-
-        if (despesa.isExisteParcela()) {
-            valorParcela = despesa.getValorParcelado().divide(new BigDecimal(despesa.getQtdParcela()), 2, RoundingMode.HALF_UP);
-            despesa.setValor(valorParcela);
-        }
-
-        if(!usuarioList.isEmpty()){
-            BigDecimal valorTotalADividir = new BigDecimal("0.00");
-            BigDecimal valorASubtrair = new BigDecimal("0.00");
-            for (Usuario u : usuarioList) {
-                if(u.getValorDividido() != null){
-                    valorTotalADividir = valorTotalADividir.add(u.getValorDividido());
-                }
-
-                if(!Objects.equals(u.getId(), usuario.getId())){
-                    valorASubtrair = valorASubtrair.add(u.getValorDividido());
-                }
-            }
-
-            despesa.setValorTotalADividir(valorTotalADividir);
-
-            despesa.setValorParcelado(valorTotalADividir);
-
-            if((valorTotalADividir.subtract(valorASubtrair)).compareTo(BigDecimal.ZERO) > 0) {
-                despesa.setValor(valorTotalADividir.subtract(valorASubtrair));
-            }
+        //Valor a dividir da parcela
+        if(data.isExisteParcela()) {
+            despesa.setValorTotalADividir(despesa.getValor());
         }
 
         //Por fim, gravo a despesa
@@ -200,39 +179,70 @@ public class DespesaService {
 
         //Se houver usuario para divisão da despesa, insere na tabela associativa REGISTRO_FINANCEIRO_USUARIO
         if(!usuarioList.isEmpty()) {
+            Integer qtdPagamentos = 0;
+
             for (Usuario u : usuarioList) {
                 DespesaUsuario despesaUsuario = new DespesaUsuario();
                 despesaUsuario.setDespesa(despesa);
                 despesaUsuario.setUsuario(u);
-                despesaUsuario.setCriadoPor(usuario.getLogin());
+                despesaUsuario.setCriadoPor(usuarioLogado.getLogin());
                 despesaUsuario.setValor(u.getValorDividido());
-                despesaUsuario.setStatusPagamento(false);
+
+                boolean despesaFoiPaga = data.getUsuariosResponsaveis().stream().anyMatch(uDTO -> uDTO.getId().equals(despesaUsuario.getUsuario().getId()) && uDTO.isStatusPagamento());
+                despesaUsuario.setStatusPagamento(despesaFoiPaga);
+
                 despesaUsuarioRepository.saveAndFlush(despesaUsuario);
+
+                if(despesaFoiPaga){
+                    qtdPagamentos++;
+                }
+            }
+
+            if(qtdPagamentos == usuarioList.size()){
+                pagarDespesa(despesa, usuarioLogado);
             }
         }
 
+        //Faz o parcelamento se houver
+        if(data.isExisteParcela()) {
+            gerarParcelamento(despesa, usuarioList, usuarioLogado);
+        }
+
+        return despesa;
+    }
+
+    private void pagarDespesa(Despesa despesa, Usuario usuarioLogado){
+        despesa.setStatusPagamento(StatusPagamento.SIM);
+        despesa.setAlteradoPor(usuarioLogado.getLogin());
+        despesa.setDataAlteracao(Instant.now());
+
+        despesaRepository.saveAndFlush(despesa);
+    }
+
+    private void gerarParcelamento(Despesa despesaOriginal, List<Usuario> usuarioList, Usuario usuarioLogado){
         //Aplicando as parcelas para outras competências
         List<Despesa> despesaParcelaList = new ArrayList<Despesa>();
 
-        if(despesa.isExisteParcela()){
-            despesaParcelaList.add(despesa);
+        if(despesaOriginal.isExisteParcela()){
+            despesaParcelaList.add(despesaOriginal);
 
-            for (int i = 1; i <= despesa.getQtdParcela(); i++) {
+            for (int i = 1; i <= despesaOriginal.getQtdParcela(); i++) {
                 if(i != 1){
                     //Cria uma nova despesa de arcordo com a
                     Despesa despesaParcelada = new Despesa();
-                    BeanUtils.copyProperties(despesa, despesaParcelada);
+                    BeanUtils.copyProperties(despesaOriginal, despesaParcelada);
 
                     despesaParcelada.setId(null);
                     despesaParcelada.setCompetencia(gerarNovaCompetencia(despesaParcelaList));
                     despesaParcelada.setDtVencimento(despesaParcelaList.getLast().getDtVencimento().plusMonths(1));
                     despesaParcelada.setExisteParcela(true);
-                    despesaParcelada.setIdParcelaPai(despesa.getId());
+                    despesaParcelada.setIdParcelaPai(despesaOriginal.getId());
                     despesaParcelada.setNrParcela(i);
-                    despesaParcelada.setQtdParcela(despesa.getQtdParcela());
+                    despesaParcelada.setQtdParcela(despesaOriginal.getQtdParcela());
+                    despesaParcelada.setStatusPagamento(StatusPagamento.NAO);
 
-                    despesaParcelada.setValorParcelado(despesa.getValorParcelado());
-                    despesaParcelada.setValor(valorParcela);
+                    despesaParcelada.setValorParcelado(despesaOriginal.getValorParcelado());
+                    despesaParcelada.setValor(despesaOriginal.getValorParcelado());
 
                     despesaParcelada.setUsuariosResponsaveis(usuarioList);
 
@@ -246,7 +256,8 @@ public class DespesaService {
                             DespesaUsuario despesaUsuario = new DespesaUsuario();
                             despesaUsuario.setDespesa(despesaParcelada);
                             despesaUsuario.setUsuario(u);
-                            despesaUsuario.setCriadoPor(usuario.getLogin());
+                            despesaUsuario.setCriadoPor(usuarioLogado.getLogin());
+                            despesaUsuario.setStatusPagamento(false);
                             despesaUsuarioRepository.saveAndFlush(despesaUsuario);
                         }
                     }
@@ -255,9 +266,6 @@ public class DespesaService {
                 }
             }
         }
-
-        //Retorno a despesa
-        return despesa;
     }
 
     private static String gerarNovaCompetencia(List<Despesa> despesaParcelaList) {
@@ -280,7 +288,7 @@ public class DespesaService {
 
         //Pega o usuário logado
         String loginUsuarioToken = tokenService.validarToken(tokenService.recuperarToken(request));
-        Usuario usuario = usuarioRepository.findByLogin(loginUsuarioToken);
+        Usuario usuarioLogado = usuarioRepository.findByLogin(loginUsuarioToken);
 
         //Busca o registro Financeiro do banco e altero seus campos que não são chaves
         Despesa despesaBanco = this.buscarPorId(data.getId());
@@ -291,11 +299,15 @@ public class DespesaService {
         despesaBanco.setValor(data.getValor());
         despesaBanco.setTipoRegistroFinanceiro(data.getTipoRegistroFinanceiro());
         despesaBanco.setCategoriaRegistroFinanceiro(data.getCategoriaRegistroFinanceiro());
-        despesaBanco.setStatusPagamento(data.getStatusPagamento());
-        despesaBanco.setAlteradoPor(usuario.getLogin()); //Auditoria
+        despesaBanco.setStatusPagamento(StatusPagamento.NAO);
+        despesaBanco.setAlteradoPor(usuarioLogado.getLogin()); //Auditoria
+
+        if(data.getDtLancamento() != null) {
+            despesaBanco.setDtLancamento(DateUtils.retornaLocalDate(data.getDtLancamento(), "yyyy-MM-dd"));
+        }
 
         if(data.getDtVencimento() != null) {
-            despesaBanco.setDtVencimento(DateUtils.parseData(data.getDtVencimento()));
+            despesaBanco.setDtVencimento(DateUtils.retornaLocalDate(data.getDtVencimento(), "yyyy-MM-dd"));
         }
 
         //Altero Instituição Financeira do Usuario
@@ -326,8 +338,10 @@ public class DespesaService {
                 .toList();
 
         //Se houver usuario para divisão da despesa, insere na tabela associativa REGISTRO_FINANCEIRO_USUARIO
-        List<DespesaUsuario> registrosFinanceirosTelaList = new ArrayList<DespesaUsuario>();
+        List<DespesaUsuario> despesaUsuarioList = new ArrayList<DespesaUsuario>();
         if(!usuarioList.isEmpty()) {
+            Integer qtdPagamentos = 0;
+
             for (Usuario u : usuarioList) {
                 DespesaUsuario rfu = despesaUsuarioRepository.findByUsuarioAndDespesa(u,despesaBanco);
 
@@ -336,14 +350,24 @@ public class DespesaService {
                 despesaUsuario.setDespesa(despesaBanco);
                 despesaUsuario.setUsuario(u);
                 despesaUsuario.setValor(u.getValorDividido());
-                despesaUsuario.setStatusPagamento(u.isStatusPagamento());
-                despesaUsuario.setCriadoPor(usuario.getLogin());
+                despesaUsuario.setCriadoPor(usuarioLogado.getLogin());
+
+                boolean despesaFoiPaga = data.getUsuariosResponsaveis().stream().anyMatch(uDTO -> uDTO.getId().equals(despesaUsuario.getUsuario().getId()) && uDTO.isStatusPagamento());
+                despesaUsuario.setStatusPagamento(despesaFoiPaga);
+
+                if(despesaFoiPaga){
+                    qtdPagamentos++;
+                }
 
                 if(despesaUsuario.getId() == null) { //trata-se do usuaario adicionando uma divisão para uma despesa sem parcela
                     despesaUsuarioRepository.saveAndFlush(despesaUsuario);
                 }
 
-                registrosFinanceirosTelaList.add(despesaUsuario);
+                despesaUsuarioList.add(despesaUsuario);
+            }
+
+            if(qtdPagamentos == usuarioList.size()){
+                pagarDespesa(despesaBanco, usuarioLogado);
             }
         }
 
@@ -355,7 +379,7 @@ public class DespesaService {
         for (DespesaUsuario despesaUsuarioBanco : registrosFinanceirosUsuarioBancoList) {
             boolean existeNaTela = false;
 
-            for (DespesaUsuario despesaTela : registrosFinanceirosTelaList) {
+            for (DespesaUsuario despesaTela : despesaUsuarioList) {
                 if(despesaTela.getDespesa() != null && despesaUsuarioBanco.getId() != null){
                     if (despesaTela.getId().equals(despesaUsuarioBanco.getId())) {
                         existeNaTela = true;
@@ -372,9 +396,12 @@ public class DespesaService {
         //Por fim, gravo a despesa
         despesaRepository.saveAndFlush(despesaBanco);
 
+        HashSet<DespesaUsuario> despesaUsuarioSet = new HashSet<>(despesaUsuarioList);
+
+
         // Agora você pode salvar os objetos que precisam ser salvos
-        if(!registrosFinanceirosTelaList.isEmpty()){
-           despesaUsuarioRepository.saveAllAndFlush(registrosFinanceirosTelaList);
+        if(!despesaUsuarioList.isEmpty()){
+           despesaUsuarioRepository.saveAllAndFlush(despesaUsuarioSet);
         }
 
         // E excluir os objetos que precisam ser excluídos

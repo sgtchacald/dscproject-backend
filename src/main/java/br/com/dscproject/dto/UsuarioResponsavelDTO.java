@@ -28,6 +28,11 @@ public class UsuarioResponsavelDTO {
 
     private boolean statusPagamento;
 
+    private boolean logado;
+
+    public UsuarioResponsavelDTO() {
+    }
+
     public UsuarioResponsavelDTO(Long id, String nome, String login, String email, String genero, BigDecimal valorDividido, boolean statusPagamento) {
         this.id = id;
         this.nome = nome;
@@ -36,6 +41,17 @@ public class UsuarioResponsavelDTO {
         this.genero = genero;
         this.valorDividido = valorDividido;
         this.statusPagamento = statusPagamento;
+    }
+
+    public UsuarioResponsavelDTO(Long id, String nome, String login, String email, String genero, BigDecimal valorDividido, boolean statusPagamento, boolean logado) {
+        this.id = id;
+        this.nome = nome;
+        this.login = login;
+        this.email = email;
+        this.genero = genero;
+        this.valorDividido = valorDividido;
+        this.statusPagamento = statusPagamento;
+        this.logado = logado;
     }
 
 }

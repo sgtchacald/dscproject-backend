@@ -39,6 +39,8 @@ public class DespesaDTO {
 
     private BigDecimal valorTotalADividir;
 
+    private BigDecimal valorDividido;
+
     private BigDecimal valor;
 
     private CategoriaRegistroFinanceiro categoriaRegistroFinanceiro;
