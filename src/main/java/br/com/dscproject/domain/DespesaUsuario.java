@@ -31,17 +31,17 @@ public class DespesaUsuario extends AbstractAuditoria implements Serializable {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "DESP_ID", nullable = false)
+    @JoinColumn(name = "DESP_ID")
     private Despesa despesa;
 
     @ManyToOne
-    @JoinColumn(name = "USU_ID", nullable = false)
+    @JoinColumn(name = "USU_ID")
     private Usuario usuario;
 
-    @Column(name = "DEPU_VALOR", nullable = true)
+    @Column(name = "DEPU_VALOR")
     private BigDecimal valor;
 
-    @Column(name = "DEPU_IND_STATUS_PAGAMENTO", nullable = false)
+    @Column(name = "DEPU_IND_STATUS_PAGAMENTO")
     private boolean statusPagamento = false;
 
 }

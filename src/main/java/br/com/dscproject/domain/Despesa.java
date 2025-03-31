@@ -90,7 +90,7 @@ public class Despesa extends AbstractAuditoria implements Serializable {
 
     @JsonIgnore
     @ManyToMany(cascade = { CascadeType.MERGE, CascadeType.PERSIST }, fetch = FetchType.LAZY)
-    @JoinTable(name = "DESPESA_USUARIO", joinColumns = @JoinColumn(name = "DESP_ID"), inverseJoinColumns = @JoinColumn(name = "USU_ID"))
+    @JoinTable(name = "DESPESAS_USUARIO", joinColumns = @JoinColumn(name = "DESP_ID"), inverseJoinColumns = @JoinColumn(name = "USU_ID"))
     private List<Usuario> usuariosResponsaveis;
 
 }
