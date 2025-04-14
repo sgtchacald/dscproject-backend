@@ -1,6 +1,5 @@
 package br.com.dscproject.domain;
 
-import br.com.dscproject.enums.StatusPagamento;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

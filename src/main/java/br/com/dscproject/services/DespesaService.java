@@ -1,14 +1,20 @@
 package br.com.dscproject.services;
 
-import br.com.dscproject.domain.*;
+import br.com.dscproject.domain.Despesa;
+import br.com.dscproject.domain.DespesaUsuario;
+import br.com.dscproject.domain.InstituicaoFinanceiraUsuario;
+import br.com.dscproject.domain.Usuario;
 import br.com.dscproject.dto.DespesaDTO;
 import br.com.dscproject.dto.UsuarioResponsavelDTO;
+import br.com.dscproject.dto.UsuarioResponsavelQueryDTO;
 import br.com.dscproject.enums.StatusPagamento;
-import br.com.dscproject.repository.*;
+import br.com.dscproject.repository.DespesaRepository;
+import br.com.dscproject.repository.DespesaUsuarioRepository;
+import br.com.dscproject.repository.InstituicaoFinanceiraUsuarioRepository;
+import br.com.dscproject.repository.UsuarioRepository;
 import br.com.dscproject.services.exceptions.DataIntegrityException;
 import br.com.dscproject.services.exceptions.ObjectNotFoundException;
 import br.com.dscproject.utils.DateUtils;
-import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -17,12 +23,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.*;
-
-import static java.lang.Integer.valueOf;
 
 @Service
 @Slf4j
@@ -41,16 +43,10 @@ public class DespesaService {
     private DespesaUsuarioRepository despesaUsuarioRepository;
 
     @Autowired
-    private DespesaRepositoryCustom despesaRepositoryCustom;
-
-    @Autowired
     private TokenService tokenService;
 
     @Autowired
     private HttpServletRequest request;
-
-    @Autowired
-    private EntityManager entityManager;
 
 
     @Transactional
@@ -80,28 +76,34 @@ public class DespesaService {
                 dto.setDtVencimento(despesa.getDtVencimento().toString());
             }
 
-            Set<UsuarioResponsavelDTO> usuariosResponsaveis = new HashSet<UsuarioResponsavelDTO>();
+            Set<UsuarioResponsavelQueryDTO> usuariosResponsaveisQuery = new HashSet<UsuarioResponsavelQueryDTO>();
+
             if(despesa.getId() != null) {
-                usuariosResponsaveis = despesaRepository.findUsuariosByDespesaId(despesa.getId());
+                usuariosResponsaveisQuery = despesaRepository.findUsuariosByDespesaId(despesa.getId());
             }
 
-            if(!usuariosResponsaveis.isEmpty()){
-                for (UsuarioResponsavelDTO usuarioResponsavel : usuariosResponsaveis) {
-                  if(usuarioResponsavel.getId().equals(usuarioLogado.getId())){
-                      usuarioResponsavel.setNome("Minha Cota");
-                      usuarioResponsavel.setLogado(true);
 
-                      if(usuarioResponsavel.getValorDividido() != null){
-                          dto.setValorDividido(usuarioResponsavel.getValorDividido());
+            if(!usuariosResponsaveisQuery.isEmpty()){
+                for (UsuarioResponsavelQueryDTO urq : usuariosResponsaveisQuery) {
+
+                    UsuarioResponsavelDTO ur = new UsuarioResponsavelDTO();
+                    BeanUtils.copyProperties(urq, ur);
+
+
+                    if(ur.getId().equals(usuarioLogado.getId())){
+                        ur.setNome("Minha Cota");
+                        ur.setLogado(true);
+
+                      if(ur.getValorDividido() != null){
+                          dto.setValorDividido(ur.getValorDividido());
                       }
                   }
-                  dto.getUsuariosResponsaveis().add(usuarioResponsavel);
+                  dto.getUsuariosResponsaveis().add(ur);
                 }
 
-                if(usuariosResponsaveis.size() > 1) {
+                if(usuariosResponsaveisQuery.size() > 1) {
                     dto.setExisteDivisao(true);
                 }
-
             }
 
             despesaDTOList.add(dto);
@@ -119,6 +121,7 @@ public class DespesaService {
         );
     }
 
+    @Transactional
     public Despesa inserir(DespesaDTO data) {
         String loginUsuarioToken = tokenService.validarToken(tokenService.recuperarToken(request));
         Usuario usuarioLogado = usuarioRepository.findByLogin(loginUsuarioToken);
@@ -174,7 +177,6 @@ public class DespesaService {
             despesa.setValorTotalADividir(despesa.getValor());
         }
 
-        //Por fim, gravo a despesa
         despesaRepository.saveAndFlush(despesa);
 
         //Se houver usuario para divisão da despesa, insere na tabela associativa REGISTRO_FINANCEIRO_USUARIO
@@ -188,7 +190,7 @@ public class DespesaService {
                 despesaUsuario.setCriadoPor(usuarioLogado.getLogin());
                 despesaUsuario.setValor(u.getValorDividido());
 
-                boolean despesaFoiPaga = data.getUsuariosResponsaveis().stream().anyMatch(uDTO -> uDTO.getId().equals(despesaUsuario.getUsuario().getId()) && uDTO.isStatusPagamento());
+                boolean despesaFoiPaga = data.getUsuariosResponsaveis().stream().anyMatch(uDTO -> uDTO.getId().equals(despesaUsuario.getUsuario().getId()) && uDTO.getStatusPagamento());
                 despesaUsuario.setStatusPagamento(despesaFoiPaga);
 
                 despesaUsuarioRepository.saveAndFlush(despesaUsuario);
@@ -211,60 +213,44 @@ public class DespesaService {
         return despesa;
     }
 
-    private void pagarDespesa(Despesa despesa, Usuario usuarioLogado){
+    public void pagarDespesa(Despesa despesa, Usuario usuarioLogado){
         despesa.setStatusPagamento(StatusPagamento.SIM);
         despesa.setAlteradoPor(usuarioLogado.getLogin());
         despesa.setDataAlteracao(Instant.now());
 
-        despesaRepository.saveAndFlush(despesa);
+        //despesaRepository.saveAndFlush(despesa);
     }
 
-    private void gerarParcelamento(Despesa despesaOriginal, List<Usuario> usuarioList, Usuario usuarioLogado){
-        //Aplicando as parcelas para outras competências
-        List<Despesa> despesaParcelaList = new ArrayList<Despesa>();
+    @Transactional
+    public void gerarParcelamento(Despesa despesaOriginal, List<Usuario> usuarios, Usuario usuarioLogado) {
+        List<Despesa> parcelasList = new ArrayList<>();
 
-        if(despesaOriginal.isExisteParcela()){
-            despesaParcelaList.add(despesaOriginal);
+        parcelasList.add(despesaOriginal);
 
-            for (int i = 1; i <= despesaOriginal.getQtdParcela(); i++) {
-                if(i != 1){
-                    //Cria uma nova despesa de arcordo com a
-                    Despesa despesaParcelada = new Despesa();
-                    BeanUtils.copyProperties(despesaOriginal, despesaParcelada);
+        for (int i = 1; i <= despesaOriginal.getQtdParcela(); i++) {
+            if (i == 1) continue;
 
-                    despesaParcelada.setId(null);
-                    despesaParcelada.setCompetencia(gerarNovaCompetencia(despesaParcelaList));
-                    despesaParcelada.setDtVencimento(despesaParcelaList.getLast().getDtVencimento().plusMonths(1));
-                    despesaParcelada.setExisteParcela(true);
-                    despesaParcelada.setIdParcelaPai(despesaOriginal.getId());
-                    despesaParcelada.setNrParcela(i);
-                    despesaParcelada.setQtdParcela(despesaOriginal.getQtdParcela());
-                    despesaParcelada.setStatusPagamento(StatusPagamento.NAO);
+            Despesa parcela = new Despesa();
+            BeanUtils.copyProperties(despesaOriginal, parcela, "id", "despesaUsuarios");
+            parcela.setCompetencia(gerarNovaCompetencia(parcelasList));
+            parcela.setDtVencimento(parcelasList.getLast().getDtVencimento().plusMonths(1));
+            parcela.setIdParcelaPai(despesaOriginal.getId());
+            parcela.setNrParcela(i);
+            parcela.setStatusPagamento(StatusPagamento.NAO);
 
-                    despesaParcelada.setValorParcelado(despesaOriginal.getValorParcelado());
-                    despesaParcelada.setValor(despesaOriginal.getValorParcelado());
-
-                    despesaParcelada.setUsuariosResponsaveis(usuarioList);
-
-                    //cria a despesa parcelada para as competências posteriores
-                    //Por fim, gravo a despesa que foi clonada e reajustada
-                    despesaRepository.saveAndFlush(despesaParcelada);
-
-                    //Se houver usuario para divisão da despesa, insere na tabela associativa REGISTRO_FINANCEIRO_USUARIO
-                    if(!usuarioList.isEmpty()) {
-                        for (Usuario u : usuarioList) {
-                            DespesaUsuario despesaUsuario = new DespesaUsuario();
-                            despesaUsuario.setDespesa(despesaParcelada);
-                            despesaUsuario.setUsuario(u);
-                            despesaUsuario.setCriadoPor(usuarioLogado.getLogin());
-                            despesaUsuario.setStatusPagamento(false);
-                            despesaUsuarioRepository.saveAndFlush(despesaUsuario);
-                        }
-                    }
-
-                    despesaParcelaList.add(despesaParcelada);
-                }
+            for (Usuario usuario : usuarios) {
+                DespesaUsuario du = new DespesaUsuario();
+                du.setDespesa(parcela);
+                du.setUsuario(usuario);
+                du.setValor(usuario.getValorDividido());
+                du.setStatusPagamento(false);
+                du.setCriadoPor(usuarioLogado.getLogin());
+                parcela.getDespesaUsuarios().add(du);
             }
+
+            despesaRepository.save(parcela);
+
+            parcelasList.add(parcela);
         }
     }
 
@@ -352,7 +338,7 @@ public class DespesaService {
                 despesaUsuario.setValor(u.getValorDividido());
                 despesaUsuario.setCriadoPor(usuarioLogado.getLogin());
 
-                boolean despesaFoiPaga = data.getUsuariosResponsaveis().stream().anyMatch(uDTO -> uDTO.getId().equals(despesaUsuario.getUsuario().getId()) && uDTO.isStatusPagamento());
+                boolean despesaFoiPaga = data.getUsuariosResponsaveis().stream().anyMatch(uDTO -> uDTO.getId().equals(despesaUsuario.getUsuario().getId()) && uDTO.getStatusPagamento());
                 despesaUsuario.setStatusPagamento(despesaFoiPaga);
 
                 if(despesaFoiPaga){
@@ -415,6 +401,7 @@ public class DespesaService {
 
     }
 
+    @Transactional
     public void excluir(Long id) throws ObjectNotFoundException {
         Optional<Despesa> despesa = despesaRepository.findById(id);
 

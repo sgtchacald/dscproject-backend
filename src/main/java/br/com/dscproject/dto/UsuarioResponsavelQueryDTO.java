@@ -1,6 +1,5 @@
 package br.com.dscproject.dto;
 
-import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,7 +9,7 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UsuarioResponsavelDTO {
+public class UsuarioResponsavelQueryDTO {
 
     private Long id;
 
@@ -25,7 +24,5 @@ public class UsuarioResponsavelDTO {
     private BigDecimal valorDividido;
 
     private Boolean statusPagamento = Boolean.FALSE;
-
-    private Boolean logado = Boolean.FALSE;
 
 }

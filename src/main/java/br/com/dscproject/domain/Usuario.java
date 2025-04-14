@@ -29,7 +29,7 @@ public class Usuario extends AbstractAuditoria implements Serializable, UserDeta
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "USU_ID", nullable = false)
     private Long id;
 
@@ -60,7 +60,7 @@ public class Usuario extends AbstractAuditoria implements Serializable, UserDeta
     BigDecimal valorDividido;
 
     @Transient
-    boolean statusPagamento;
+    boolean statusPagamento=false;
 
     public Genero getGenero() {
         return Genero.toEnum(genero);

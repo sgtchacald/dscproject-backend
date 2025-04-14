@@ -5,25 +5,26 @@ import br.com.dscproject.enums.StatusPagamento;
 import br.com.dscproject.enums.TipoRegistroFinanceiro;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.hibernate.envers.Audited;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
-@Data @NoArgsConstructor @AllArgsConstructor
 @Entity
-@NamedEntityGraph(
-        name = "br.com.dscproject.domain.Usuario",
-        attributeNodes = @NamedAttributeNode("usuariosResponsaveis")
-)
-
 @Table(name="DESPESAS")
+@EqualsAndHashCode(callSuper = true)
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Audited
 @EntityListeners(AuditingEntityListener.class)
 public class Despesa extends AbstractAuditoria implements Serializable {
@@ -88,9 +89,9 @@ public class Despesa extends AbstractAuditoria implements Serializable {
     @JoinColumn(name = "INFU_ID")
     private InstituicaoFinanceiraUsuario instituicaoFinanceiraUsuario;
 
+    //@NotAudited
     @JsonIgnore
-    @ManyToMany(cascade = { CascadeType.MERGE, CascadeType.PERSIST }, fetch = FetchType.LAZY)
-    @JoinTable(name = "DESPESAS_USUARIO", joinColumns = @JoinColumn(name = "DESP_ID"), inverseJoinColumns = @JoinColumn(name = "USU_ID"))
-    private List<Usuario> usuariosResponsaveis;
+    @OneToMany(mappedBy = "despesa", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DespesaUsuario> despesaUsuarios = new ArrayList<>();
 
 }

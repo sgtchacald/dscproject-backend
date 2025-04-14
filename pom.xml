@@ -84,7 +84,7 @@
 		<dependency>
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-envers</artifactId>
-			<version>3.2.5</version>
+			<version>3.3.10</version>
 		</dependency>
 		<dependency>
 			<groupId>com.auth0</groupId>
