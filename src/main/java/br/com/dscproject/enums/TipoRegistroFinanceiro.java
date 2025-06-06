@@ -8,7 +8,11 @@ import lombok.Setter;
 public enum TipoRegistroFinanceiro {
 
     RECEITA("R", "Receita"),
-    DESPESA("D", "Despesa");
+    DESPESA("D", "Despesa"),
+    CREDITO("C", "Crédito"),
+    DEBITO("D", "Débito"),
+    ENTRADA("E", "Entrada"),
+    SAIDA("S", "Saída");
 
     @Getter
     @Setter
