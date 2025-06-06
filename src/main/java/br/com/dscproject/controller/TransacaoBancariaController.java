@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
@@ -48,6 +49,11 @@ public class TransacaoBancariaController {
     public ResponseEntity<Void> excluir(@PathVariable Long id) throws ObjectNotFoundException{
         transacaoBancariaService.excluir(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @RequestMapping(value="/importar-dados-bancarios", method = RequestMethod.POST)
+    public ResponseEntity<String> importarDadosBancariosOfx(@RequestParam("file") MultipartFile file, @RequestParam("bancoCodigo") String bancoCodigo) throws ObjectNotFoundException{
+        return ResponseEntity.ok().body(transacaoBancariaService.importarDadosBancariosOfx(file, bancoCodigo));
     }
 
 }

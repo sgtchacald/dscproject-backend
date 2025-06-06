@@ -9,5 +9,7 @@ import java.util.List;
 
 @Repository
 public interface InstituicaoFinanceiraUsuarioRepository extends CrudRepository<InstituicaoFinanceiraUsuario, Long> {
+
     List<InstituicaoFinanceiraUsuario> findByUsuario(Usuario usuario);
+    InstituicaoFinanceiraUsuario findByUsuario_IdAndInstituicaoFinanceira_Codigo(Long usuarioId, String instituicaoFinanceiraCodigo);
 }

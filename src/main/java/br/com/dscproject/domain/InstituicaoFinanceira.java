@@ -30,6 +30,9 @@ public class InstituicaoFinanceira extends AbstractAuditoria implements Serializ
     @Column(name = "INFI_NOME", length = 100, nullable = false, unique = true)
     private String nome;
 
+    @Column(name = "INFI_COD", length = 100, nullable = true, unique = true)
+    private String codigo;
+
     @Column(name = "INFI_TIPO_INSTITUICAO", length = 1, nullable = false)
     private String tipoInstituicao;
 

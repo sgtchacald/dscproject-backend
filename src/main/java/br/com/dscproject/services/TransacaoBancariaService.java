@@ -11,6 +11,15 @@ import br.com.dscproject.repository.TransacaoBancariaRepository;
 import br.com.dscproject.repository.UsuarioRepository;
 import br.com.dscproject.services.exceptions.DataIntegrityException;
 import br.com.dscproject.services.exceptions.ObjectNotFoundException;
+import com.webcohesion.ofx4j.domain.data.MessageSetType;
+import com.webcohesion.ofx4j.domain.data.ResponseEnvelope;
+import com.webcohesion.ofx4j.domain.data.ResponseMessageSet;
+import com.webcohesion.ofx4j.domain.data.banking.BankAccountDetails;
+import com.webcohesion.ofx4j.domain.data.banking.BankStatementResponse;
+import com.webcohesion.ofx4j.domain.data.banking.BankStatementResponseTransaction;
+import com.webcohesion.ofx4j.domain.data.banking.BankingResponseMessageSet;
+import com.webcohesion.ofx4j.domain.data.common.Transaction;
+import com.webcohesion.ofx4j.io.AggregateUnmarshaller;
 import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
@@ -19,8 +28,12 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.time.Instant;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -62,8 +75,9 @@ public class TransacaoBancariaService {
             TransacaoBancariaDTO dto = new TransacaoBancariaDTO();
             BeanUtils.copyProperties(transacaoBancaria, dto);
 
+            dto.setCodigoBanco(transacaoBancaria.getInstituicaoFinanceiraUsuario().getInstituicaoFinanceira().getCodigo());
             dto.setTipoRegistroFinanceiro(transacaoBancaria.getTipoRegistroFinanceiro().getCodigo());
-            dto.setCategoriaRegistroFinanceiro(transacaoBancaria.getCategoriaRegistroFinanceiro().getCodigo());
+            dto.setCategoriaRegistroFinanceiro((transacaoBancaria.getCategoriaRegistroFinanceiro() != null) ? transacaoBancaria.getCategoriaRegistroFinanceiro().getCodigo() : null);
 
             //Seta a instituição financeira usuario e a instituicao do usuario
             dto.setInstituicaoFinanceiraUsuarioId(transacaoBancaria.getInstituicaoFinanceiraUsuario().getId());
@@ -71,6 +85,8 @@ public class TransacaoBancariaService {
             if(transacaoBancaria.getDtLancamento() != null) {
                 dto.setDtLancamento(transacaoBancaria.getDtLancamento().toString());
             }
+
+            dto.setOfxTransacaoId(transacaoBancaria.getOfxTransacaoId());
 
             transacaoBancariaDTOList.add(dto);
         }
@@ -93,7 +109,7 @@ public class TransacaoBancariaService {
         transacaoBancaria.setTipoRegistroFinanceiro(TipoRegistroFinanceiro.toEnum(data.getTipoRegistroFinanceiro()));
         transacaoBancaria.setCategoriaRegistroFinanceiro(CategoriaRegistroFinanceiro.toEnum(data.getCategoriaRegistroFinanceiro()));
 
-        transacaoBancaria.setDtLancamento(Instant.now());
+        //transacaoBancaria.setDtLancamento(Instant.now());
 
         Optional<InstituicaoFinanceiraUsuario> ifu  = this.instituicaoFinanceiraUsuarioRepository.findById(data.getInstituicaoFinanceiraUsuarioId());
         if(ifu.isEmpty()){
@@ -149,5 +165,86 @@ public class TransacaoBancariaService {
             throw new DataIntegrityException("Não foi possível excluir este registro pois existem registros vinculados a ele.");
         }
     }
-}
 
+    public String importarDadosBancariosOfx(MultipartFile file, String bancoCodigo) {
+
+        //Obtendo Dados do Usuário
+        String loginUsuarioToken = tokenService.validarToken(tokenService.recuperarToken(request));
+        Usuario usuario = usuarioRepository.findByLogin(loginUsuarioToken);
+
+        if(usuario == null){
+            throw new RuntimeException("Usuário não está logado, por favor, faça Login.");
+        }
+
+        //Obtendo dados da instituição financeira vinculada ao usuário
+        InstituicaoFinanceiraUsuario instituicaoFinanceiraUsuario = this.instituicaoFinanceiraUsuarioRepository.findByUsuario_IdAndInstituicaoFinanceira_Codigo(usuario.getId(), bancoCodigo);
+        if(instituicaoFinanceiraUsuario == null){
+            throw new RuntimeException("Não foi encontrada a instituição financeira de codigo " + bancoCodigo + " vinculada a este usuario");
+        }
+
+        try {
+            InputStreamReader reader = new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8);
+            AggregateUnmarshaller a = new AggregateUnmarshaller(ResponseEnvelope.class);
+            ResponseEnvelope re = (ResponseEnvelope) a.unmarshal(reader);
+
+            MessageSetType type = MessageSetType.banking;
+            ResponseMessageSet message = re.getMessageSet(type);
+
+            List<TransacaoBancaria> transacaoBancariaList = new ArrayList<>();
+
+            if(message != null){
+                TransacaoBancariaDTO dto = new TransacaoBancariaDTO();
+                List<BankStatementResponseTransaction> bancoList = ((BankingResponseMessageSet) message).getStatementResponses();
+
+                if(bancoList.isEmpty()){
+                    throw new RuntimeException("Não foi possível obter resposta do conteúdo do arquivo, verifique se é um arquivo OFX válido.");
+                }
+
+                for(BankStatementResponseTransaction banco : bancoList){
+
+                    BankStatementResponse response = banco.getMessage();
+
+                    if(response == null){
+                        throw new RuntimeException("Não foi possível obter mensagem de resposta do arquivo, verifique se é um arquivo OFX válido.");
+                    }
+
+                    BankAccountDetails contaBancaria = response.getAccount();
+
+                    List<Transaction> transacoes = response.getTransactionList().getTransactions();
+                    if(transacoes.isEmpty()){
+                        throw new RuntimeException("Não existem transações nesse arquivo OFX.");
+                    }
+
+                    for(Transaction tb : transacoes){
+                      TransacaoBancaria transacaoBancaria = new TransacaoBancaria();
+                      transacaoBancaria.setId(null);
+                      transacaoBancaria.setDescricao(tb.getMemo());
+                      transacaoBancaria.setValor(BigDecimal.valueOf(tb.getAmount()));
+                      transacaoBancaria.setDtLancamento(tb.getDatePosted());
+                      transacaoBancaria.setCriadoPor(usuario.getLogin());
+                      transacaoBancaria.setOfxTransacaoId(tb.getId());
+                      transacaoBancaria.setTipoRegistroFinanceiro(TipoRegistroFinanceiro.retornaEnumOFX(tb.getTransactionType().toString()));
+                      transacaoBancaria.setCategoriaRegistroFinanceiro(null);
+                      transacaoBancaria.setInstituicaoFinanceiraUsuario(instituicaoFinanceiraUsuario);
+
+
+                        transacaoBancariaList.add(transacaoBancaria);
+                    }
+                }
+            }
+
+            if(transacaoBancariaList.isEmpty()){
+                throw new RuntimeException("Não foi possível obter as transações do arquivo OFX.");
+            }
+
+            transacaoBancariaRepository.saveAllAndFlush(transacaoBancariaList);
+
+        } catch (Exception e){
+            e.printStackTrace();
+            throw new RuntimeException("Não foi possível fazer upload do arquivo OFX.");
+        }
+
+        return "Arquivo OFX Importado com sucesso!";
+    }
+
+}

@@ -13,7 +13,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.util.Date;
 
 @Data @NoArgsConstructor @AllArgsConstructor
 @Entity
@@ -36,14 +36,17 @@ public class TransacaoBancaria extends AbstractAuditoria implements Serializable
     private BigDecimal valor;
 
     @Column(name = "TRBA_DT_LANCAMENTO", nullable = false)
-    private Instant dtLancamento;
+    private Date dtLancamento;
+
+    @Column(name = "TRBA_OFX_TRANSACAO_ID", length = 512, nullable = true, unique = true)
+    private String ofxTransacaoId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "TRBA_TIPO_TRANSACAO", nullable = false)
     private TipoRegistroFinanceiro tipoRegistroFinanceiro;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "TRBA_CATEGORIA_REGISTRO_FINANCEIRO", nullable = false)
+    @Column(name = "TRBA_CATEGORIA_REGISTRO_FINANCEIRO", nullable = true)
     private CategoriaRegistroFinanceiro categoriaRegistroFinanceiro;
 
     @JsonIgnore

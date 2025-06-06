@@ -16,10 +16,14 @@ public class TransacaoBancariaDTO {
 
     private String dtLancamento;
 
+    private String ofxTransacaoId;
+
     private String tipoRegistroFinanceiro;
 
     private String categoriaRegistroFinanceiro;
 
     private Long instituicaoFinanceiraUsuarioId;
+
+    private String codigoBanco;
 
 }

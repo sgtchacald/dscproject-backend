@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.lang.runtime.SwitchBootstraps;
+
 @AllArgsConstructor
 public enum TipoRegistroFinanceiro {
 
@@ -32,6 +34,17 @@ public enum TipoRegistroFinanceiro {
             }
 
         throw new IllegalArgumentException("Código: " + codigo + " inválido");
+    }
+
+    public static TipoRegistroFinanceiro retornaEnumOFX(String codigo){
+        switch (codigo){
+            case "DEBIT":
+                return TipoRegistroFinanceiro.DEBITO;
+            case "CREDIT":
+                return TipoRegistroFinanceiro.CREDITO;
+            default:
+                return null;
+        }
     }
 
 }
