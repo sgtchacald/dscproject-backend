@@ -8,6 +8,7 @@ import br.com.dscproject.dto.DespesaDTO;
 import br.com.dscproject.dto.UsuarioResponsavelDTO;
 import br.com.dscproject.dto.UsuarioResponsavelQueryDTO;
 import br.com.dscproject.enums.StatusPagamento;
+import br.com.dscproject.enums.TipoRegistroFinanceiro;
 import br.com.dscproject.repository.DespesaRepository;
 import br.com.dscproject.repository.DespesaUsuarioRepository;
 import br.com.dscproject.repository.InstituicaoFinanceiraUsuarioRepository;
@@ -15,6 +16,16 @@ import br.com.dscproject.repository.UsuarioRepository;
 import br.com.dscproject.services.exceptions.DataIntegrityException;
 import br.com.dscproject.services.exceptions.ObjectNotFoundException;
 import br.com.dscproject.utils.DateUtils;
+import com.webcohesion.ofx4j.domain.data.MessageSetType;
+import com.webcohesion.ofx4j.domain.data.ResponseEnvelope;
+import com.webcohesion.ofx4j.domain.data.ResponseMessageSet;
+import com.webcohesion.ofx4j.domain.data.common.Transaction;
+import com.webcohesion.ofx4j.domain.data.creditcard.CreditCardAccountDetails;
+import com.webcohesion.ofx4j.domain.data.creditcard.CreditCardResponseMessageSet;
+import com.webcohesion.ofx4j.domain.data.creditcard.CreditCardStatementResponse;
+import com.webcohesion.ofx4j.domain.data.creditcard.CreditCardStatementResponseTransaction;
+import com.webcohesion.ofx4j.io.AggregateUnmarshaller;
+import com.webcohesion.ofx4j.io.OFXParseException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +33,15 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 
 @Service
@@ -48,16 +66,13 @@ public class DespesaService {
     @Autowired
     private HttpServletRequest request;
 
-
     @Transactional
     public List<DespesaDTO> buscarTodosPorUsuario() {
-        String loginUsuarioToken = tokenService.validarToken(tokenService.recuperarToken(request));
-        Usuario usuarioLogado = usuarioRepository.findByLogin(loginUsuarioToken);
 
         List<DespesaDTO> despesaDTOList = new ArrayList<>();
 
         List<Despesa> despesaList = new ArrayList<>();
-        despesaList = despesaRepository.findDespesasByUsuarioId(usuarioLogado.getId());
+        despesaList = despesaRepository.findDespesasByUsuarioId(this.retornaUsuarioLogado().getId());
 
         for (Despesa despesa : despesaList) {
             DespesaDTO dto = new DespesaDTO();
@@ -90,7 +105,7 @@ public class DespesaService {
                     BeanUtils.copyProperties(urq, ur);
 
 
-                    if(ur.getId().equals(usuarioLogado.getId())){
+                    if(ur.getId().equals(this.retornaUsuarioLogado().getId())){
                         ur.setNome("Minha Cota");
                         ur.setLogado(true);
 
@@ -123,8 +138,6 @@ public class DespesaService {
 
     @Transactional
     public Despesa inserir(DespesaDTO data) {
-        String loginUsuarioToken = tokenService.validarToken(tokenService.recuperarToken(request));
-        Usuario usuarioLogado = usuarioRepository.findByLogin(loginUsuarioToken);
 
         Despesa despesa  = new Despesa();
         BeanUtils.copyProperties(data, despesa);
@@ -170,7 +183,7 @@ public class DespesaService {
                 .toList();
 
         //Seta Auditoria
-        despesa.setCriadoPor(usuarioLogado.getLogin());
+        despesa.setCriadoPor(this.retornaUsuarioLogado().getLogin());
 
         //Valor a dividir da parcela
         if(data.isExisteParcela()) {
@@ -187,7 +200,7 @@ public class DespesaService {
                 DespesaUsuario despesaUsuario = new DespesaUsuario();
                 despesaUsuario.setDespesa(despesa);
                 despesaUsuario.setUsuario(u);
-                despesaUsuario.setCriadoPor(usuarioLogado.getLogin());
+                despesaUsuario.setCriadoPor(this.retornaUsuarioLogado().getLogin());
                 despesaUsuario.setValor(u.getValorDividido());
 
                 boolean despesaFoiPaga = data.getUsuariosResponsaveis().stream().anyMatch(uDTO -> uDTO.getId().equals(despesaUsuario.getUsuario().getId()) && uDTO.getStatusPagamento());
@@ -201,13 +214,13 @@ public class DespesaService {
             }
 
             if(qtdPagamentos == usuarioList.size()){
-                pagarDespesa(despesa, usuarioLogado);
+                pagarDespesa(despesa, this.retornaUsuarioLogado());
             }
         }
 
         //Faz o parcelamento se houver
         if(data.isExisteParcela()) {
-            gerarParcelamento(despesa, usuarioList, usuarioLogado);
+            gerarParcelamento(despesa, usuarioList, this.retornaUsuarioLogado());
         }
 
         return despesa;
@@ -217,8 +230,6 @@ public class DespesaService {
         despesa.setStatusPagamento(StatusPagamento.SIM);
         despesa.setAlteradoPor(usuarioLogado.getLogin());
         despesa.setDataAlteracao(Instant.now());
-
-        //despesaRepository.saveAndFlush(despesa);
     }
 
     @Transactional
@@ -272,10 +283,6 @@ public class DespesaService {
     @Transactional
     public void editar(DespesaDTO data) throws ObjectNotFoundException {
 
-        //Pega o usuário logado
-        String loginUsuarioToken = tokenService.validarToken(tokenService.recuperarToken(request));
-        Usuario usuarioLogado = usuarioRepository.findByLogin(loginUsuarioToken);
-
         //Busca o registro Financeiro do banco e altero seus campos que não são chaves
         Despesa despesaBanco = this.buscarPorId(data.getId());
 
@@ -286,7 +293,7 @@ public class DespesaService {
         despesaBanco.setTipoRegistroFinanceiro(data.getTipoRegistroFinanceiro());
         despesaBanco.setCategoriaRegistroFinanceiro(data.getCategoriaRegistroFinanceiro());
         despesaBanco.setStatusPagamento(StatusPagamento.NAO);
-        despesaBanco.setAlteradoPor(usuarioLogado.getLogin()); //Auditoria
+        despesaBanco.setAlteradoPor(this.retornaUsuarioLogado().getLogin()); //Auditoria
 
         if(data.getDtLancamento() != null) {
             despesaBanco.setDtLancamento(DateUtils.retornaLocalDate(data.getDtLancamento(), "yyyy-MM-dd"));
@@ -336,7 +343,7 @@ public class DespesaService {
                 despesaUsuario.setDespesa(despesaBanco);
                 despesaUsuario.setUsuario(u);
                 despesaUsuario.setValor(u.getValorDividido());
-                despesaUsuario.setCriadoPor(usuarioLogado.getLogin());
+                despesaUsuario.setCriadoPor(this.retornaUsuarioLogado().getLogin());
 
                 boolean despesaFoiPaga = data.getUsuariosResponsaveis().stream().anyMatch(uDTO -> uDTO.getId().equals(despesaUsuario.getUsuario().getId()) && uDTO.getStatusPagamento());
                 despesaUsuario.setStatusPagamento(despesaFoiPaga);
@@ -353,7 +360,7 @@ public class DespesaService {
             }
 
             if(qtdPagamentos == usuarioList.size()){
-                pagarDespesa(despesaBanco, usuarioLogado);
+                pagarDespesa(despesaBanco, this.retornaUsuarioLogado());
             }
         }
 
@@ -405,7 +412,6 @@ public class DespesaService {
     public void excluir(Long id) throws ObjectNotFoundException {
         Optional<Despesa> despesa = despesaRepository.findById(id);
 
-
         List<DespesaUsuario> registrosFinanceirosUsuarioList = new ArrayList<>();
 
         if(despesa.isPresent()){
@@ -426,5 +432,131 @@ public class DespesaService {
             throw new DataIntegrityException("Não foi possível excluir este registro pois existem registros vinculados a ele.");
         }
     }
+
+    public String importarDadosCartaoCreditoOfx(MultipartFile file, String bancoCodigo, String competencia) throws OFXParseException, IOException {
+
+        if(this.retornaUsuarioLogado() == null){
+            throw new RuntimeException("Usuário não está logado, por favor, faça Login.");
+        }
+
+        //Obtendo dados da instituição financeira vinculada ao usuário
+        InstituicaoFinanceiraUsuario instituicaoFinanceiraUsuario = this.instituicaoFinanceiraUsuarioRepository.findByUsuario_IdAndInstituicaoFinanceira_Codigo(this.retornaUsuarioLogado().getId(), bancoCodigo);
+        if(instituicaoFinanceiraUsuario == null){
+            throw new RuntimeException("Não foi encontrada a instituição financeira de codigo " + bancoCodigo + " vinculada a este usuario");
+        }
+
+
+        InputStreamReader reader = new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8);
+        AggregateUnmarshaller a = new AggregateUnmarshaller(ResponseEnvelope.class);
+        ResponseEnvelope re = (ResponseEnvelope) a.unmarshal(reader);
+
+        MessageSetType type = MessageSetType.creditcard;
+        ResponseMessageSet message = re.getMessageSet(type);
+
+        List<Despesa> despesaList = new ArrayList<>();
+
+        if(message != null){
+
+            List<CreditCardStatementResponseTransaction> cartaoList = ((CreditCardResponseMessageSet) message).getStatementResponses();
+            if(cartaoList.isEmpty()){
+                throw new RuntimeException("Não foi possível obter resposta do conteúdo do arquivo, verifique se é um arquivo OFX válido.");
+            }
+
+            for(CreditCardStatementResponseTransaction cartao : cartaoList){
+
+                CreditCardStatementResponse response = cartao.getMessage();
+
+                if(response == null){
+                    throw new RuntimeException("Não foi possível obter mensagem de resposta do arquivo, verifique se é um arquivo OFX válido.");
+                }
+
+                CreditCardAccountDetails conta = response.getAccount();
+
+                List<Transaction> transacoes = response.getTransactionList().getTransactions();
+                if(transacoes.isEmpty()){
+                    throw new RuntimeException("Não existem transações nesse arquivo OFX.");
+                }
+
+                for(Transaction tb : transacoes){
+                    Despesa despesa = new Despesa();
+                    despesa.setId(null);
+                    despesa.setCompetencia(competencia);
+                    despesa.setNome(tb.getMemo());
+                    despesa.setValor(BigDecimal.valueOf(tb.getAmount()).abs());
+
+                    Date date = tb.getDatePosted();
+
+                    LocalDate localDate = date.toInstant()
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate();
+
+                    despesa.setDtLancamento(localDate);
+
+                    despesa.setOfxTransacaoId(tb.getId());
+                    despesa.setTipoRegistroFinanceiro(TipoRegistroFinanceiro.DESPESA);
+                    despesa.setCategoriaRegistroFinanceiro(null);
+                    despesa.setInstituicaoFinanceiraUsuario(instituicaoFinanceiraUsuario);
+
+                    despesa.setCriadoPor(this.retornaUsuarioLogado().getLogin());
+                    despesa.setDataCriacao(Instant.now());
+
+                    despesa.setAlteradoPor(null);
+                    despesa.setDataAlteracao(null);
+
+                    if(!"Pagamento recebido".equals(despesa.getNome())){
+                        despesaList.add(despesa);
+                    }
+                }
+            }
+        }
+
+        if(despesaList.isEmpty()){
+            throw new RuntimeException("Não foi possível obter as transações do cartão de crédito do arquivo OFX.");
+        }
+
+        validaExistenciaDespesaImportadaNoBanco(despesaList);
+
+        despesaRepository.saveAllAndFlush(despesaList);
+
+        return "Arquivo OFX Importado com sucesso!";
+    }
+
+    public void validaExistenciaDespesaImportadaNoBanco(List<Despesa> despesaList) {
+        for (Despesa despesa : despesaList) {
+            boolean existeRegistroNoBanco = false;
+
+            List<Despesa> despesaBancoList = despesaRepository.findByCompetenciaAndNomeAndDescricaoAndDtLancamentoAndOfxTransacaoIdAndInstituicaoFinanceiraUsuario_Id(
+                despesa.getCompetencia(),
+                despesa.getNome(),
+                despesa.getDescricao(),
+                despesa.getDtLancamento(),
+                despesa.getOfxTransacaoId(),
+                despesa.getInstituicaoFinanceiraUsuario().getId()
+            );
+
+            existeRegistroNoBanco = despesaRepository.existsByCompetenciaAndNomeAndDescricaoAndDtLancamentoAndOfxTransacaoIdAndInstituicaoFinanceiraUsuario_Id(
+                    despesa.getCompetencia(),
+                    despesa.getNome(),
+                    despesa.getDescricao(),
+                    despesa.getDtLancamento(),
+                    despesa.getOfxTransacaoId(),
+                    despesa.getInstituicaoFinanceiraUsuario().getId()
+            );
+
+            if (existeRegistroNoBanco) {
+                throw new RuntimeException("A despesa de id " + despesa.getOfxTransacaoId() + ", nome '" + despesa.getNome() + "' já existe no banco de dados.");
+            }
+        }
+    }
+
+
+
+    public Usuario retornaUsuarioLogado(){
+        String loginUsuarioToken = this.tokenService.validarToken(tokenService.recuperarToken(request));
+       return this.usuarioRepository.findByLogin(loginUsuarioToken);
+    }
+
 }
+
+
 

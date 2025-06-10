@@ -4,12 +4,15 @@ import br.com.dscproject.domain.Despesa;
 import br.com.dscproject.dto.DespesaDTO;
 import br.com.dscproject.services.DespesaService;
 import br.com.dscproject.services.exceptions.ObjectNotFoundException;
+import com.webcohesion.ofx4j.io.OFXParseException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
@@ -48,6 +51,11 @@ public class DespesaController {
     public ResponseEntity<Void> excluir(@PathVariable Long id) throws ObjectNotFoundException{
         despesaService.excluir(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @RequestMapping(value="/importar-dados-cartao", method = RequestMethod.POST)
+    public ResponseEntity<String> importarDadosBancariosOfx(@RequestParam("file") MultipartFile file, @RequestParam("bancoCodigo") String bancoCodigo, @RequestParam("competencia") String competencia) throws ObjectNotFoundException, IOException, OFXParseException {
+        return ResponseEntity.ok().body(despesaService.importarDadosCartaoCreditoOfx(file, bancoCodigo, competencia));
     }
 
 }

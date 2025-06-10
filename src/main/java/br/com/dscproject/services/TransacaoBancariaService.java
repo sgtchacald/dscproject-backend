@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -60,16 +61,18 @@ public class TransacaoBancariaService {
     @Autowired
     private EntityManager entityManager;
 
-
+    public Usuario retornaUsuarioLogado(){
+        String loginUsuarioToken = this.tokenService.validarToken(tokenService.recuperarToken(request));
+        return this.usuarioRepository.findByLogin(loginUsuarioToken);
+    }
+    
     @Transactional
     public List<TransacaoBancariaDTO> buscarTodosPorUsuario() {
-        String loginUsuarioToken = tokenService.validarToken(tokenService.recuperarToken(request));
-        Usuario usuario = usuarioRepository.findByLogin(loginUsuarioToken);
 
         List<TransacaoBancariaDTO> transacaoBancariaDTOList = new ArrayList<>();
 
         List<TransacaoBancaria> transacaoBancariaList = new ArrayList<>();
-        transacaoBancariaList = transacaoBancariaRepository.findByInstituicaoFinanceiraUsuarioUsuario_Id(usuario.getId());
+        transacaoBancariaList = transacaoBancariaRepository.findByInstituicaoFinanceiraUsuarioUsuario_Id(this.retornaUsuarioLogado().getId());
 
         for (TransacaoBancaria transacaoBancaria : transacaoBancariaList) {
             TransacaoBancariaDTO dto = new TransacaoBancariaDTO();
@@ -100,9 +103,6 @@ public class TransacaoBancariaService {
     }
 
     public TransacaoBancaria inserir(TransacaoBancariaDTO data) {
-        String loginUsuarioToken = tokenService.validarToken(tokenService.recuperarToken(request));
-        Usuario usuario = usuarioRepository.findByLogin(loginUsuarioToken);
-
         TransacaoBancaria transacaoBancaria  = new TransacaoBancaria();
         BeanUtils.copyProperties(data, transacaoBancaria);
 
@@ -121,7 +121,7 @@ public class TransacaoBancariaService {
         transacaoBancaria.setInstituicaoFinanceiraUsuario(instituicaoFinanceiraUsuario);
 
         //Seta Auditoria
-        transacaoBancaria.setCriadoPor(usuario.getLogin());
+        transacaoBancaria.setCriadoPor(this.retornaUsuarioLogado().getLogin());
 
         //Por fim, gravo a transacaoBancaria
         transacaoBancariaRepository.saveAndFlush(transacaoBancaria);
@@ -133,10 +133,6 @@ public class TransacaoBancariaService {
     @Transactional
     public void editar(TransacaoBancariaDTO data) throws ObjectNotFoundException {
 
-        //Pega o usuário logado
-        String loginUsuarioToken = tokenService.validarToken(tokenService.recuperarToken(request));
-        Usuario usuario = usuarioRepository.findByLogin(loginUsuarioToken);
-
         //Busca o registro Financeiro do banco e altero seus campos que não são chaves
         TransacaoBancaria transacaoBancariaDB = this.buscarPorId(data.getId());
 
@@ -144,7 +140,7 @@ public class TransacaoBancariaService {
         transacaoBancariaDB.setValor(data.getValor());
         transacaoBancariaDB.setTipoRegistroFinanceiro(TipoRegistroFinanceiro.toEnum(data.getTipoRegistroFinanceiro()));
         transacaoBancariaDB.setCategoriaRegistroFinanceiro(CategoriaRegistroFinanceiro.toEnum(data.getCategoriaRegistroFinanceiro()));
-        transacaoBancariaDB.setAlteradoPor(usuario.getLogin()); //Auditoria
+        transacaoBancariaDB.setAlteradoPor(this.retornaUsuarioLogado().getLogin()); //Auditoria
 
         //Altero Instituição Financeira do Usuario
         Optional<InstituicaoFinanceiraUsuario> ifuDB  = this.instituicaoFinanceiraUsuarioRepository.findById(data.getInstituicaoFinanceiraUsuarioId());
@@ -168,16 +164,11 @@ public class TransacaoBancariaService {
 
     public String importarDadosBancariosOfx(MultipartFile file, String bancoCodigo) {
 
-        //Obtendo Dados do Usuário
-        String loginUsuarioToken = tokenService.validarToken(tokenService.recuperarToken(request));
-        Usuario usuario = usuarioRepository.findByLogin(loginUsuarioToken);
-
-        if(usuario == null){
+        if(this.retornaUsuarioLogado() == null){
             throw new RuntimeException("Usuário não está logado, por favor, faça Login.");
         }
 
-        //Obtendo dados da instituição financeira vinculada ao usuário
-        InstituicaoFinanceiraUsuario instituicaoFinanceiraUsuario = this.instituicaoFinanceiraUsuarioRepository.findByUsuario_IdAndInstituicaoFinanceira_Codigo(usuario.getId(), bancoCodigo);
+        InstituicaoFinanceiraUsuario instituicaoFinanceiraUsuario = this.instituicaoFinanceiraUsuarioRepository.findByUsuario_IdAndInstituicaoFinanceira_Codigo(this.retornaUsuarioLogado().getId(), bancoCodigo);
         if(instituicaoFinanceiraUsuario == null){
             throw new RuntimeException("Não foi encontrada a instituição financeira de codigo " + bancoCodigo + " vinculada a este usuario");
         }
@@ -221,14 +212,18 @@ public class TransacaoBancariaService {
                       transacaoBancaria.setDescricao(tb.getMemo());
                       transacaoBancaria.setValor(BigDecimal.valueOf(tb.getAmount()));
                       transacaoBancaria.setDtLancamento(tb.getDatePosted());
-                      transacaoBancaria.setCriadoPor(usuario.getLogin());
                       transacaoBancaria.setOfxTransacaoId(tb.getId());
                       transacaoBancaria.setTipoRegistroFinanceiro(TipoRegistroFinanceiro.retornaEnumOFX(tb.getTransactionType().toString()));
                       transacaoBancaria.setCategoriaRegistroFinanceiro(null);
                       transacaoBancaria.setInstituicaoFinanceiraUsuario(instituicaoFinanceiraUsuario);
 
+                      transacaoBancaria.setCriadoPor(this.retornaUsuarioLogado().getLogin());
+                      transacaoBancaria.setDataCriacao(Instant.now());
 
-                        transacaoBancariaList.add(transacaoBancaria);
+                      transacaoBancaria.setAlteradoPor(null);
+                      transacaoBancaria.setDataAlteracao(null);
+
+                      transacaoBancariaList.add(transacaoBancaria);
                     }
                 }
             }

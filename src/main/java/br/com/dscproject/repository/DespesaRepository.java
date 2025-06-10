@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -26,5 +28,9 @@ public interface DespesaRepository extends JpaRepository<Despesa, Long> {
             "JOIN DespesaUsuario du ON d.id = du.despesa.id " +
             "WHERE du.usuario.id = :usuarioId ")
     List<Despesa> findDespesasByUsuarioId(@Param("usuarioId") Long usuarioId);
+
+    List<Despesa> findByCompetenciaAndNomeAndDescricaoAndDtLancamentoAndOfxTransacaoIdAndInstituicaoFinanceiraUsuario_Id(String competencia, String nome, String descricao, LocalDate dtLancamento, String ofxTransacaoId, Long instituicaoFinanceiraUsuario_id );
+
+    boolean existsByCompetenciaAndNomeAndDescricaoAndDtLancamentoAndOfxTransacaoIdAndInstituicaoFinanceiraUsuario_Id(String competencia, String nome, String descricao, LocalDate dtLancamento, String ofxTransacaoId, Long instituicaoFinanceiraUsuario_id );
 
 }
