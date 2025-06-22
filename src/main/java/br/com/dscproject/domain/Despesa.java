@@ -73,7 +73,7 @@ public class Despesa extends AbstractAuditoria implements Serializable {
     private BigDecimal valor;
 
     @Column(name = "DESP_OFX_TRANSACAO_ID", length = 512, nullable = true)
-    private String ofxTransacaoId;
+    private String transacaoId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "DESP_TIPO_TRANSACAO", nullable = false)

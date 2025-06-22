@@ -25,10 +25,13 @@ public class InstituicaoFinanceiraDTO {
 
     private String nome;
 
+    private String codigo;
+
     private TipoInstituicaoFinanceira tipoInstituicao;
 
     public InstituicaoFinanceiraDTO(InstituicaoFinanceira instituicaoFinanceira) {
         this.nome = instituicaoFinanceira.getNome();
+        this.codigo = instituicaoFinanceira.getCodigo();
         this.tipoInstituicao = instituicaoFinanceira.getTipoInstituicao();
     }
 }

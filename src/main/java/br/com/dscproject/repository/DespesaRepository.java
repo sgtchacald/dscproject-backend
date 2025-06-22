@@ -29,8 +29,8 @@ public interface DespesaRepository extends JpaRepository<Despesa, Long> {
             "WHERE du.usuario.id = :usuarioId ")
     List<Despesa> findDespesasByUsuarioId(@Param("usuarioId") Long usuarioId);
 
-    List<Despesa> findByCompetenciaAndNomeAndDescricaoAndDtLancamentoAndOfxTransacaoIdAndInstituicaoFinanceiraUsuario_Id(String competencia, String nome, String descricao, LocalDate dtLancamento, String ofxTransacaoId, Long instituicaoFinanceiraUsuario_id );
+    List<Despesa> findByCompetenciaAndNomeAndDescricaoAndDtLancamentoAndTransacaoIdAndInstituicaoFinanceiraUsuario_Id(String competencia, String nome, String descricao, LocalDate dtLancamento, String transacaoId, Long instituicaoFinanceiraUsuario_id );
 
-    boolean existsByCompetenciaAndNomeAndDescricaoAndDtLancamentoAndOfxTransacaoIdAndInstituicaoFinanceiraUsuario_Id(String competencia, String nome, String descricao, LocalDate dtLancamento, String ofxTransacaoId, Long instituicaoFinanceiraUsuario_id );
+    boolean existsByCompetenciaAndNomeAndDescricaoAndDtLancamentoAndTransacaoIdAndInstituicaoFinanceiraUsuario_Id(String competencia, String nome, String descricao, LocalDate dtLancamento, String transacaoId, Long instituicaoFinanceiraUsuario_id );
 
 }

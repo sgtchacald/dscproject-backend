@@ -29,19 +29,29 @@ import com.webcohesion.ofx4j.io.OFXParseException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 
 @Service
@@ -65,6 +75,23 @@ public class DespesaService {
 
     @Autowired
     private HttpServletRequest request;
+
+    private Usuario retornaUsuarioLogado(){
+        String loginUsuarioToken = this.tokenService.validarToken(tokenService.recuperarToken(request));
+        return this.usuarioRepository.findByLogin(loginUsuarioToken);
+    }
+
+    private InstituicaoFinanceiraUsuario retornaInstituicaoFinanceiraUsuario(String bancoCodigo){
+        InstituicaoFinanceiraUsuario instituicaoFinanceiraUsuario = this.instituicaoFinanceiraUsuarioRepository.findByUsuario_IdAndInstituicaoFinanceira_Codigo(this.retornaUsuarioLogado().getId(), bancoCodigo);
+
+        if(instituicaoFinanceiraUsuario == null){
+            throw new RuntimeException("Não foi encontrada a instituição financeira de codigo " + bancoCodigo + " vinculada a este usuario");
+        }
+
+        return instituicaoFinanceiraUsuario;
+    }
+
+
 
     @Transactional
     public List<DespesaDTO> buscarTodosPorUsuario() {
@@ -433,18 +460,265 @@ public class DespesaService {
         }
     }
 
-    public String importarDadosCartaoCreditoOfx(MultipartFile file, String bancoCodigo, String competencia) throws OFXParseException, IOException {
+    public void validaExistenciaDespesaImportadaNoBanco(List<Despesa> despesaList) {
+        for (Despesa despesa : despesaList) {
+            boolean existeRegistroNoBanco = false;
+
+            existeRegistroNoBanco = despesaRepository.existsByCompetenciaAndNomeAndDescricaoAndDtLancamentoAndTransacaoIdAndInstituicaoFinanceiraUsuario_Id(
+                    despesa.getCompetencia(),
+                    despesa.getNome(),
+                    despesa.getDescricao(),
+                    despesa.getDtLancamento(),
+                    despesa.getTransacaoId(),
+                    despesa.getInstituicaoFinanceiraUsuario().getId()
+            );
+
+            if (existeRegistroNoBanco) {
+                throw new RuntimeException("A despesa de id " + despesa.getTransacaoId() + ", nome '" + despesa.getNome() + "' já existe no banco de dados.");
+            }
+        }
+    }
+
+    public String importarDadosCartaoCredito(MultipartFile file, String bancoCodigo, String competencia, String tipoImportacao) throws IOException, OFXParseException {
 
         if(this.retornaUsuarioLogado() == null){
             throw new RuntimeException("Usuário não está logado, por favor, faça Login.");
         }
 
-        //Obtendo dados da instituição financeira vinculada ao usuário
-        InstituicaoFinanceiraUsuario instituicaoFinanceiraUsuario = this.instituicaoFinanceiraUsuarioRepository.findByUsuario_IdAndInstituicaoFinanceira_Codigo(this.retornaUsuarioLogado().getId(), bancoCodigo);
-        if(instituicaoFinanceiraUsuario == null){
-            throw new RuntimeException("Não foi encontrada a instituição financeira de codigo " + bancoCodigo + " vinculada a este usuario");
+        return switch (tipoImportacao) {
+            case "bradesco" -> importarDadosCartaoCreditoExcelBradesco(file, bancoCodigo, competencia);
+            case "itau"     -> importarDadosCartaoCreditoExcelItau(file, bancoCodigo, competencia);
+            case "c6bank"   -> importarDadosCartaoCreditoExcelC6Bank(file, bancoCodigo, competencia);
+            case "ofx"      -> importarDadosCartaoCreditoOfx(file, bancoCodigo, competencia);
+            default         -> "Não foi possível fazer a importação do arquivo";
+        };
+    }
+
+    public String importarDadosCartaoCreditoExcelItau(MultipartFile file, String bancoCodigo, String competencia) throws IOException {
+        InputStream arquivoExcel = file.getInputStream();
+
+        HSSFWorkbook workbook = new HSSFWorkbook(arquivoExcel);
+
+        HSSFSheet sheet = workbook.getSheetAt(0);
+
+        if(sheet == null  || sheet.getPhysicalNumberOfRows() == 0){
+            throw new RuntimeException("Não existem planilhas para serem lidas, tente um arquivo válido.");
         }
 
+        List<Despesa> despesasList = new ArrayList<Despesa>();
+
+        for (int i = 0; i <= sheet.getLastRowNum(); i++) {
+            HSSFRow row = sheet.getRow(i);
+            if (row == null) continue;
+
+            HSSFCell cellA = row.getCell(0); // Data
+            HSSFCell cellB = row.getCell(1); // Descrição
+            HSSFCell cellD = row.getCell(3); // Valor
+
+            if(cellA == null || cellB == null || cellD == null) continue;
+
+            String valorA = cellA.toString().trim();
+            String valorB = cellB.toString().trim();
+            String valorD = cellD.toString().trim();
+
+            if (valorA.isBlank() || valorB.isBlank() || valorD.isBlank()) continue;
+            if("PAGAMENTO EFETUADO".equals(valorB.trim())) continue;
+            if ("data".equals(valorA) || "lançamento".equalsIgnoreCase(valorB) || "valor".equals(valorD)) continue;
+
+            Despesa despesa = new Despesa();
+
+            if (cellA.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cellA)) {
+                LocalDate localDate = cellA.getLocalDateTimeCellValue().toLocalDate();
+                despesa.setDtLancamento(localDate);
+            } else {
+                // ou você pode tentar parsear se vier como string no formato dd/MM/yyyy
+                String texto = cellA.getStringCellValue().trim();
+                try {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                    LocalDate localDate = LocalDate.parse(texto, formatter);
+                    despesa.setDtLancamento(localDate);
+
+                } catch (DateTimeParseException e) {
+                    throw new RuntimeException("Data inválida na célula A: " + texto);
+                }
+            }
+            despesa.setNome(cellB.toString());
+            despesa.setValor(BigDecimal.valueOf(cellD.getNumericCellValue()));
+            despesa.setCompetencia(competencia);
+            despesa.setTipoRegistroFinanceiro(TipoRegistroFinanceiro.DESPESA);
+            despesa.setInstituicaoFinanceiraUsuario(retornaInstituicaoFinanceiraUsuario(bancoCodigo));
+
+            despesa.setTransacaoId("TRANSACAO_ID_IMPORTACAO_EXCEL_" + this.retornaInstituicaoFinanceiraUsuario(bancoCodigo).getInstituicaoFinanceira().getNome().toUpperCase() + "_" + this.retornaUsuarioLogado().getId() + "_" + competencia.replaceAll("-", ""));
+
+            despesa.setCriadoPor(this.retornaUsuarioLogado().getLogin());
+            despesa.setDataCriacao(Instant.now());
+
+            despesa.setAlteradoPor(null);
+            despesa.setDataAlteracao(null);
+
+            despesasList.add(despesa);
+        }
+
+        workbook.close();
+
+        validaExistenciaDespesaImportadaNoBanco(despesasList);
+
+        despesaRepository.saveAllAndFlush(despesasList);
+
+        return "Arquivo .xls Importado com sucesso!";
+    }
+
+    public String importarDadosCartaoCreditoExcelBradesco(MultipartFile file, String bancoCodigo, String competencia) throws OFXParseException, IOException {
+
+        InputStream arquivoExcel = file.getInputStream();
+
+        HSSFWorkbook workbook = new HSSFWorkbook(arquivoExcel);
+
+        HSSFSheet sheet = workbook.getSheetAt(0);
+
+        if(sheet == null  || sheet.getPhysicalNumberOfRows() == 0){
+            throw new RuntimeException("Não existem planilhas para serem lidas, tente um arquivo válido.");
+        }
+
+        List<Despesa> despesasList = new ArrayList<Despesa>();
+
+        for (int i = 0; i <= sheet.getLastRowNum(); i++) {
+            HSSFRow row = sheet.getRow(i);
+            if (row == null) continue;
+
+            HSSFCell cellA = row.getCell(0); // Data
+            HSSFCell cellB = row.getCell(1); // Descrição
+            HSSFCell cellE = row.getCell(4); // Valor
+
+            if(cellA == null || cellB == null || cellE == null) continue;
+
+            String valorA = cellA.toString().trim();
+            String valorB = cellB.toString().trim();
+            String valorE = cellE.toString().trim();
+
+            if (valorA.isBlank() || valorB.isBlank() || valorE.isBlank()) continue;
+            if("PAGAMENTO EFETUADO".equals(valorB.trim())) continue;
+            if ("Data".equalsIgnoreCase(valorA) || "Histórico".equalsIgnoreCase(valorB) || "Valor(R$)".equalsIgnoreCase(valorE)) continue;
+
+            Despesa despesa = new Despesa();
+
+            if (cellA.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cellA)) {
+                LocalDate localDate = cellA.getLocalDateTimeCellValue().toLocalDate();
+                despesa.setDtLancamento(localDate);
+            } else {
+                // ou você pode tentar parsear se vier como string no formato dd/MM/yyyy
+                String texto = cellA.getStringCellValue().trim() +  "/" + LocalDate.now().getYear();
+                try {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                    LocalDate localDate = LocalDate.parse(texto, formatter);
+                    despesa.setDtLancamento(localDate);
+
+                } catch (DateTimeParseException e) {
+                    throw new RuntimeException("Data inválida na célula A: " + texto);
+                }
+            }
+            despesa.setNome(cellB.toString());
+            despesa.setValor(BigDecimal.valueOf(Double.parseDouble(cellE.getStringCellValue().replaceAll(",", "."))));
+            despesa.setCompetencia(competencia);
+            despesa.setTipoRegistroFinanceiro(TipoRegistroFinanceiro.DESPESA);
+            despesa.setInstituicaoFinanceiraUsuario(retornaInstituicaoFinanceiraUsuario(bancoCodigo));
+
+            despesa.setTransacaoId("TRANSACAO_ID_IMPORTACAO_EXCEL_" + this.retornaInstituicaoFinanceiraUsuario(bancoCodigo).getInstituicaoFinanceira().getNome().toUpperCase() + "_" + this.retornaUsuarioLogado().getId() + "_" + competencia.replaceAll("-", ""));
+
+            despesa.setCriadoPor(this.retornaUsuarioLogado().getLogin());
+            despesa.setDataCriacao(Instant.now());
+
+            despesa.setAlteradoPor(null);
+            despesa.setDataAlteracao(null);
+
+            despesasList.add(despesa);
+        }
+
+        workbook.close();
+
+        validaExistenciaDespesaImportadaNoBanco(despesasList);
+
+        despesaRepository.saveAllAndFlush(despesasList);
+
+        return "Arquivo .xls Importado com sucesso!";
+    }
+
+    public String importarDadosCartaoCreditoExcelC6Bank(MultipartFile file, String bancoCodigo, String competencia) throws IOException {
+        InputStream arquivoExcel = file.getInputStream();
+
+        HSSFWorkbook workbook = new HSSFWorkbook(arquivoExcel);
+
+        HSSFSheet sheet = workbook.getSheetAt(0);
+
+        if(sheet == null  || sheet.getPhysicalNumberOfRows() == 0){
+            throw new RuntimeException("Não existem planilhas para serem lidas, tente um arquivo válido.");
+        }
+
+        List<Despesa> despesasList = new ArrayList<Despesa>();
+
+        for (int i = 0; i <= sheet.getLastRowNum(); i++) {
+            HSSFRow row = sheet.getRow(i);
+            if (row == null) continue;
+
+            HSSFCell cellA = row.getCell(0); // Data
+            HSSFCell cellE = row.getCell(4); // Descrição
+            HSSFCell cellI = row.getCell(8); // Valor
+
+            if(cellA == null || cellE == null || cellI == null) continue;
+
+            String valorA = cellA.toString().trim();
+            String valorB = cellE.toString().trim();
+            String valorD = cellI.toString().trim();
+
+            if (valorA.isBlank() || valorB.isBlank() || valorD.isBlank()) continue;
+            if("PAGAMENTO EFETUADO".equalsIgnoreCase(valorB.trim())) continue;
+            if ("Data de compra".equalsIgnoreCase(valorA) || "Descrição".equalsIgnoreCase(valorB) || "Valor (em R$)".equalsIgnoreCase(valorD)) continue;
+
+            Despesa despesa = new Despesa();
+
+            if (cellA.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cellA)) {
+                LocalDate localDate = cellA.getLocalDateTimeCellValue().toLocalDate();
+                despesa.setDtLancamento(localDate);
+            } else {
+                // ou você pode tentar parsear se vier como string no formato dd/MM/yyyy
+                String texto = cellA.getStringCellValue().trim();
+                try {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                    LocalDate localDate = LocalDate.parse(texto, formatter);
+                    despesa.setDtLancamento(localDate);
+
+                } catch (DateTimeParseException e) {
+                    throw new RuntimeException("Data inválida na célula A: " + texto);
+                }
+            }
+
+            despesa.setNome(cellE.toString());
+            despesa.setValor(BigDecimal.valueOf(cellI.getNumericCellValue()));
+            despesa.setCompetencia(competencia);
+            despesa.setTipoRegistroFinanceiro(TipoRegistroFinanceiro.DESPESA);
+            despesa.setInstituicaoFinanceiraUsuario(retornaInstituicaoFinanceiraUsuario(bancoCodigo));
+
+            despesa.setTransacaoId("TRANSACAO_ID_IMPORTACAO_EXCEL_" + this.retornaInstituicaoFinanceiraUsuario(bancoCodigo).getInstituicaoFinanceira().getNome().toUpperCase() + "_" + this.retornaUsuarioLogado().getId() + "_" + competencia.replaceAll("-", ""));
+
+            despesa.setCriadoPor(this.retornaUsuarioLogado().getLogin());
+            despesa.setDataCriacao(Instant.now());
+
+            despesa.setAlteradoPor(null);
+            despesa.setDataAlteracao(null);
+
+            despesasList.add(despesa);
+        }
+
+        workbook.close();
+
+        validaExistenciaDespesaImportadaNoBanco(despesasList);
+
+        despesaRepository.saveAllAndFlush(despesasList);
+
+        return "Arquivo .xls Importado com sucesso!";
+    }
+
+    public String importarDadosCartaoCreditoOfx(MultipartFile file, String bancoCodigo, String competencia) throws OFXParseException, IOException {
 
         InputStreamReader reader = new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8);
         AggregateUnmarshaller a = new AggregateUnmarshaller(ResponseEnvelope.class);
@@ -492,10 +766,10 @@ public class DespesaService {
 
                     despesa.setDtLancamento(localDate);
 
-                    despesa.setOfxTransacaoId(tb.getId());
+                    despesa.setTransacaoId("TRANSACAO_ID_IMPORTACAO_EXCEL_" + this.retornaInstituicaoFinanceiraUsuario(bancoCodigo).getInstituicaoFinanceira().getNome().toUpperCase() + "_" + this.retornaUsuarioLogado().getId() + "_" + competencia.replaceAll("-", "") + "_" + tb.getId());
                     despesa.setTipoRegistroFinanceiro(TipoRegistroFinanceiro.DESPESA);
                     despesa.setCategoriaRegistroFinanceiro(null);
-                    despesa.setInstituicaoFinanceiraUsuario(instituicaoFinanceiraUsuario);
+                    despesa.setInstituicaoFinanceiraUsuario(retornaInstituicaoFinanceiraUsuario(bancoCodigo));
 
                     despesa.setCriadoPor(this.retornaUsuarioLogado().getLogin());
                     despesa.setDataCriacao(Instant.now());
@@ -521,40 +795,7 @@ public class DespesaService {
         return "Arquivo OFX Importado com sucesso!";
     }
 
-    public void validaExistenciaDespesaImportadaNoBanco(List<Despesa> despesaList) {
-        for (Despesa despesa : despesaList) {
-            boolean existeRegistroNoBanco = false;
 
-            List<Despesa> despesaBancoList = despesaRepository.findByCompetenciaAndNomeAndDescricaoAndDtLancamentoAndOfxTransacaoIdAndInstituicaoFinanceiraUsuario_Id(
-                despesa.getCompetencia(),
-                despesa.getNome(),
-                despesa.getDescricao(),
-                despesa.getDtLancamento(),
-                despesa.getOfxTransacaoId(),
-                despesa.getInstituicaoFinanceiraUsuario().getId()
-            );
-
-            existeRegistroNoBanco = despesaRepository.existsByCompetenciaAndNomeAndDescricaoAndDtLancamentoAndOfxTransacaoIdAndInstituicaoFinanceiraUsuario_Id(
-                    despesa.getCompetencia(),
-                    despesa.getNome(),
-                    despesa.getDescricao(),
-                    despesa.getDtLancamento(),
-                    despesa.getOfxTransacaoId(),
-                    despesa.getInstituicaoFinanceiraUsuario().getId()
-            );
-
-            if (existeRegistroNoBanco) {
-                throw new RuntimeException("A despesa de id " + despesa.getOfxTransacaoId() + ", nome '" + despesa.getNome() + "' já existe no banco de dados.");
-            }
-        }
-    }
-
-
-
-    public Usuario retornaUsuarioLogado(){
-        String loginUsuarioToken = this.tokenService.validarToken(tokenService.recuperarToken(request));
-       return this.usuarioRepository.findByLogin(loginUsuarioToken);
-    }
 
 }
 

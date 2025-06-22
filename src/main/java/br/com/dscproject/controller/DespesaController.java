@@ -54,8 +54,8 @@ public class DespesaController {
     }
 
     @RequestMapping(value="/importar-dados-cartao", method = RequestMethod.POST)
-    public ResponseEntity<String> importarDadosBancariosOfx(@RequestParam("file") MultipartFile file, @RequestParam("bancoCodigo") String bancoCodigo, @RequestParam("competencia") String competencia) throws ObjectNotFoundException, IOException, OFXParseException {
-        return ResponseEntity.ok().body(despesaService.importarDadosCartaoCreditoOfx(file, bancoCodigo, competencia));
+    public ResponseEntity<String> importarDadosCartaoCredito(@RequestParam("file") MultipartFile file, @RequestParam("bancoCodigo") String bancoCodigo, @RequestParam("competencia") String competencia, @RequestParam("tipoImportacao") String tipoImportacao) throws ObjectNotFoundException, IOException, OFXParseException {
+        return ResponseEntity.ok().body(despesaService.importarDadosCartaoCredito(file, bancoCodigo, competencia, tipoImportacao));
     }
 
 }
