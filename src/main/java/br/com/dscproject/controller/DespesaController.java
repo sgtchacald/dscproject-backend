@@ -14,9 +14,12 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping(value = "/despesas")
 public class DespesaController {
 
@@ -54,8 +57,16 @@ public class DespesaController {
     }
 
     @RequestMapping(value="/importar-dados-cartao", method = RequestMethod.POST)
-    public ResponseEntity<String> importarDadosCartaoCredito(@RequestParam("file") MultipartFile file, @RequestParam("bancoCodigo") String bancoCodigo, @RequestParam("competencia") String competencia, @RequestParam("tipoImportacao") String tipoImportacao) throws ObjectNotFoundException, IOException, OFXParseException {
-        return ResponseEntity.ok().body(despesaService.importarDadosCartaoCredito(file, bancoCodigo, competencia, tipoImportacao));
+    public ResponseEntity<Map<String, String>> importarDadosCartaoCredito(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("competencia") String competencia,
+            @RequestParam("bancoCodigo") String bancoCodigo) throws IOException, OFXParseException {
+
+        String mensagem = despesaService.importarDadosCartaoCredito(file, competencia, bancoCodigo);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", mensagem);
+        return ResponseEntity.ok(response);
     }
 
 }

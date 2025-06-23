@@ -479,15 +479,19 @@ public class DespesaService {
         }
     }
 
-    public String importarDadosCartaoCredito(MultipartFile file, String bancoCodigo, String competencia, String tipoImportacao) throws IOException, OFXParseException {
+    public String importarDadosCartaoCredito(MultipartFile file, String competencia, String bancoCodigo) throws IOException, OFXParseException {
 
         if(this.retornaUsuarioLogado() == null){
             throw new RuntimeException("Usuário não está logado, por favor, faça Login.");
         }
 
+        String tipoImportacao = (bancoCodigo.equals("260"))
+                ? "ofx"
+                : this.retornaInstituicaoFinanceiraUsuario(bancoCodigo).getInstituicaoFinanceira().getNome().replaceAll(" ", "").toLowerCase();
+
         return switch (tipoImportacao) {
             case "bradesco" -> importarDadosCartaoCreditoExcelBradesco(file, bancoCodigo, competencia);
-            case "itau"     -> importarDadosCartaoCreditoExcelItau(file, bancoCodigo, competencia);
+            case "itaú"     -> importarDadosCartaoCreditoExcelItau(file, bancoCodigo, competencia);
             case "c6bank"   -> importarDadosCartaoCreditoExcelC6Bank(file, bancoCodigo, competencia);
             case "ofx"      -> importarDadosCartaoCreditoOfx(file, bancoCodigo, competencia);
             default         -> "Não foi possível fazer a importação do arquivo";
