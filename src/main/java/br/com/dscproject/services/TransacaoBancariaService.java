@@ -162,7 +162,7 @@ public class TransacaoBancariaService {
         }
     }
 
-    public String importarDadosBancariosOfx(MultipartFile file, String bancoCodigo) {
+    public String importarDadosBancariosOfx(MultipartFile file, String competencia, String bancoCodigo) {
 
         if(this.retornaUsuarioLogado() == null){
             throw new RuntimeException("Usuário não está logado, por favor, faça Login.");

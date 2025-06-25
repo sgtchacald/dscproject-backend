@@ -4,6 +4,7 @@ import br.com.dscproject.domain.TransacaoBancaria;
 import br.com.dscproject.dto.TransacaoBancariaDTO;
 import br.com.dscproject.services.TransacaoBancariaService;
 import br.com.dscproject.services.exceptions.ObjectNotFoundException;
+import com.webcohesion.ofx4j.io.OFXParseException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -11,8 +12,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.io.IOException;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping(value = "/transacao-bancaria")
@@ -52,8 +56,16 @@ public class TransacaoBancariaController {
     }
 
     @RequestMapping(value="/importar-dados-bancarios", method = RequestMethod.POST)
-    public ResponseEntity<String> importarDadosBancariosOfx(@RequestParam("file") MultipartFile file, @RequestParam("bancoCodigo") String bancoCodigo) throws ObjectNotFoundException{
-        return ResponseEntity.ok().body(transacaoBancariaService.importarDadosBancariosOfx(file, bancoCodigo));
+    public ResponseEntity<Map<String, String>> importarDadosBancariosOfx(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("competencia") String competencia,
+            @RequestParam("bancoCodigo") String bancoCodigo) throws IOException, OFXParseException {
+
+        String mensagem = transacaoBancariaService.importarDadosBancariosOfx(file, competencia, bancoCodigo);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", mensagem);
+        return ResponseEntity.ok(response);
     }
 
 }
