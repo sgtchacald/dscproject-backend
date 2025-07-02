@@ -41,7 +41,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -460,7 +459,7 @@ public class DespesaService {
         }
     }
 
-    public void validaExistenciaDespesaImportadaNoBanco(List<Despesa> despesaList) {
+    public void validaExistenciaDespesaImportacao(List<Despesa> despesaList) {
         for (Despesa despesa : despesaList) {
             boolean existeRegistroNoBanco = false;
 
@@ -479,7 +478,52 @@ public class DespesaService {
         }
     }
 
-    public String importarDadosCartaoCredito(MultipartFile file, String competencia, String bancoCodigo) throws IOException, OFXParseException {
+    public Despesa setDespesaImportacao(Despesa despesa, String competencia, String bancoCodigo, String dtVencimento, HSSFCell celulaIdTransacao) {
+
+        despesa.setDescricao("");
+        despesa.setCompetencia(competencia);
+        despesa.setTipoRegistroFinanceiro(TipoRegistroFinanceiro.DESPESA);
+        despesa.setInstituicaoFinanceiraUsuario(retornaInstituicaoFinanceiraUsuario(bancoCodigo));
+        despesa.setStatusPagamento(StatusPagamento.NAO);
+        despesa.setTransacaoId("TRANSACAO_ID_IMPORTACAO_EXCEL_" + this.retornaInstituicaoFinanceiraUsuario(bancoCodigo).getInstituicaoFinanceira().getNome().toUpperCase() + "_" + this.retornaUsuarioLogado().getId() + "_" + competencia.replaceAll("-", ""));
+
+        Instant instant = Instant.parse(dtVencimento.replaceAll("\"", ""));
+        LocalDate localDate = instant.atZone(ZoneId.systemDefault()).toLocalDate();
+        despesa.setDtVencimento(localDate);
+
+        despesa.setCriadoPor(this.retornaUsuarioLogado().getLogin());
+        despesa.setDataCriacao(Instant.now());
+
+        despesa.setAlteradoPor(null);
+        despesa.setDataAlteracao(null);
+
+        return despesa;
+    }
+
+    public void setDespesaUsuarioImportacao(List <Despesa> despesaList){
+        if(despesaList.isEmpty()){
+            throw new RuntimeException("Nao foi possível salvar dados na tabela DESPESA_USUARIO.");
+        }
+        for(Despesa despesa : despesaList){
+            Usuario usuario = retornaUsuarioLogado();
+
+            DespesaUsuario despesaUsuario = new DespesaUsuario();
+            despesaUsuario.setDespesa(despesa);
+            despesaUsuario.setUsuario(usuario);
+            despesaUsuario.setValor(despesa.getValor());
+            despesaUsuario.setStatusPagamento(false);
+
+            despesaUsuario.setDataCriacao(Instant.now());
+            despesaUsuario.setAlteradoPor(usuario.getAlteradoPor());
+
+            despesaUsuario.setAlteradoPor(null);
+            despesaUsuario.setDataAlteracao(null);
+
+            despesaUsuarioRepository.saveAndFlush(despesaUsuario);
+        }
+    }
+
+    public String importarDadosCartaoCredito(MultipartFile file, String competencia, String bancoCodigo, String dtVencimento) throws IOException, OFXParseException {
 
         if(this.retornaUsuarioLogado() == null){
             throw new RuntimeException("Usuário não está logado, por favor, faça Login.");
@@ -490,15 +534,15 @@ public class DespesaService {
                 : this.retornaInstituicaoFinanceiraUsuario(bancoCodigo).getInstituicaoFinanceira().getNome().replaceAll(" ", "").toLowerCase();
 
         return switch (tipoImportacao) {
-            case "bradesco" -> importarDadosCartaoCreditoExcelBradesco(file, bancoCodigo, competencia);
-            case "itaú"     -> importarDadosCartaoCreditoExcelItau(file, bancoCodigo, competencia);
-            case "c6bank"   -> importarDadosCartaoCreditoExcelC6Bank(file, bancoCodigo, competencia);
-            case "ofx"      -> importarDadosCartaoCreditoOfx(file, bancoCodigo, competencia);
+            case "bradesco" -> importarDadosCartaoCreditoExcelBradesco(file, bancoCodigo, competencia, dtVencimento);
+            case "itaú"     -> importarDadosCartaoCreditoExcelItau(file, bancoCodigo, competencia, dtVencimento);
+            case "c6bank"   -> importarDadosCartaoCreditoExcelC6Bank(file, bancoCodigo, competencia, dtVencimento);
+            case "ofx"      -> importarDadosCartaoCreditoOfx(file, bancoCodigo, competencia, dtVencimento);
             default         -> "Não foi possível fazer a importação do arquivo";
         };
     }
 
-    public String importarDadosCartaoCreditoExcelItau(MultipartFile file, String bancoCodigo, String competencia) throws IOException {
+    public String importarDadosCartaoCreditoExcelItau(MultipartFile file, String competencia, String bancoCodigo, String dtVencimento) throws IOException {
         InputStream arquivoExcel = file.getInputStream();
 
         HSSFWorkbook workbook = new HSSFWorkbook(arquivoExcel);
@@ -548,31 +592,23 @@ public class DespesaService {
             }
             despesa.setNome(cellB.toString());
             despesa.setValor(BigDecimal.valueOf(cellD.getNumericCellValue()));
-            despesa.setCompetencia(competencia);
-            despesa.setTipoRegistroFinanceiro(TipoRegistroFinanceiro.DESPESA);
-            despesa.setInstituicaoFinanceiraUsuario(retornaInstituicaoFinanceiraUsuario(bancoCodigo));
 
-            despesa.setTransacaoId("TRANSACAO_ID_IMPORTACAO_EXCEL_" + this.retornaInstituicaoFinanceiraUsuario(bancoCodigo).getInstituicaoFinanceira().getNome().toUpperCase() + "_" + this.retornaUsuarioLogado().getId() + "_" + competencia.replaceAll("-", ""));
-
-            despesa.setCriadoPor(this.retornaUsuarioLogado().getLogin());
-            despesa.setDataCriacao(Instant.now());
-
-            despesa.setAlteradoPor(null);
-            despesa.setDataAlteracao(null);
+            despesa = setDespesaImportacao(despesa, bancoCodigo, competencia, dtVencimento, null);
 
             despesasList.add(despesa);
         }
 
         workbook.close();
 
-        validaExistenciaDespesaImportadaNoBanco(despesasList);
+        validaExistenciaDespesaImportacao(despesasList);
 
         despesaRepository.saveAllAndFlush(despesasList);
+        setDespesaUsuarioImportacao(despesasList);
 
         return "Arquivo .xls Importado com sucesso!";
     }
 
-    public String importarDadosCartaoCreditoExcelBradesco(MultipartFile file, String bancoCodigo, String competencia) throws OFXParseException, IOException {
+    public String importarDadosCartaoCreditoExcelBradesco(MultipartFile file, String competencia, String bancoCodigo, String dtVencimento) throws OFXParseException, IOException {
 
         InputStream arquivoExcel = file.getInputStream();
 
@@ -621,33 +657,28 @@ public class DespesaService {
                     throw new RuntimeException("Data inválida na célula A: " + texto);
                 }
             }
+
             despesa.setNome(cellB.toString());
+
             despesa.setValor(BigDecimal.valueOf(Double.parseDouble(cellE.getStringCellValue().replaceAll(",", "."))));
-            despesa.setCompetencia(competencia);
-            despesa.setTipoRegistroFinanceiro(TipoRegistroFinanceiro.DESPESA);
-            despesa.setInstituicaoFinanceiraUsuario(retornaInstituicaoFinanceiraUsuario(bancoCodigo));
 
-            despesa.setTransacaoId("TRANSACAO_ID_IMPORTACAO_EXCEL_" + this.retornaInstituicaoFinanceiraUsuario(bancoCodigo).getInstituicaoFinanceira().getNome().toUpperCase() + "_" + this.retornaUsuarioLogado().getId() + "_" + competencia.replaceAll("-", ""));
-
-            despesa.setCriadoPor(this.retornaUsuarioLogado().getLogin());
-            despesa.setDataCriacao(Instant.now());
-
-            despesa.setAlteradoPor(null);
-            despesa.setDataAlteracao(null);
+            despesa = setDespesaImportacao(despesa, bancoCodigo, competencia, dtVencimento, null);
 
             despesasList.add(despesa);
         }
 
         workbook.close();
 
-        validaExistenciaDespesaImportadaNoBanco(despesasList);
+        validaExistenciaDespesaImportacao(despesasList);
 
         despesaRepository.saveAllAndFlush(despesasList);
+
+        setDespesaUsuarioImportacao(despesasList);
 
         return "Arquivo .xls Importado com sucesso!";
     }
 
-    public String importarDadosCartaoCreditoExcelC6Bank(MultipartFile file, String bancoCodigo, String competencia) throws IOException {
+    public String importarDadosCartaoCreditoExcelC6Bank(MultipartFile file, String competencia, String bancoCodigo, String dtVencimento) throws IOException {
         InputStream arquivoExcel = file.getInputStream();
 
         HSSFWorkbook workbook = new HSSFWorkbook(arquivoExcel);
@@ -698,31 +729,24 @@ public class DespesaService {
 
             despesa.setNome(cellE.toString());
             despesa.setValor(BigDecimal.valueOf(cellI.getNumericCellValue()));
-            despesa.setCompetencia(competencia);
-            despesa.setTipoRegistroFinanceiro(TipoRegistroFinanceiro.DESPESA);
-            despesa.setInstituicaoFinanceiraUsuario(retornaInstituicaoFinanceiraUsuario(bancoCodigo));
 
-            despesa.setTransacaoId("TRANSACAO_ID_IMPORTACAO_EXCEL_" + this.retornaInstituicaoFinanceiraUsuario(bancoCodigo).getInstituicaoFinanceira().getNome().toUpperCase() + "_" + this.retornaUsuarioLogado().getId() + "_" + competencia.replaceAll("-", ""));
-
-            despesa.setCriadoPor(this.retornaUsuarioLogado().getLogin());
-            despesa.setDataCriacao(Instant.now());
-
-            despesa.setAlteradoPor(null);
-            despesa.setDataAlteracao(null);
+            despesa = setDespesaImportacao(despesa, bancoCodigo, competencia, dtVencimento, null);
 
             despesasList.add(despesa);
         }
 
         workbook.close();
 
-        validaExistenciaDespesaImportadaNoBanco(despesasList);
+        validaExistenciaDespesaImportacao(despesasList);
 
         despesaRepository.saveAllAndFlush(despesasList);
+
+        setDespesaUsuarioImportacao(despesasList);
 
         return "Arquivo .xls Importado com sucesso!";
     }
 
-    public String importarDadosCartaoCreditoOfx(MultipartFile file, String bancoCodigo, String competencia) throws OFXParseException, IOException {
+    public String importarDadosCartaoCreditoOfx(MultipartFile file, String bancoCodigo, String competencia, String dtVencimento) throws OFXParseException, IOException {
 
         InputStreamReader reader = new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8);
         AggregateUnmarshaller a = new AggregateUnmarshaller(ResponseEnvelope.class);
@@ -774,6 +798,13 @@ public class DespesaService {
                     despesa.setTipoRegistroFinanceiro(TipoRegistroFinanceiro.DESPESA);
                     despesa.setCategoriaRegistroFinanceiro(null);
                     despesa.setInstituicaoFinanceiraUsuario(retornaInstituicaoFinanceiraUsuario(bancoCodigo));
+                    despesa.setTransacaoId("TRANSACAO_ID_IMPORTACAO_EXCEL_" + this.retornaInstituicaoFinanceiraUsuario(bancoCodigo).getInstituicaoFinanceira().getNome().toUpperCase() + "_" + this.retornaUsuarioLogado().getId() + "_" + competencia.replaceAll("-", ""));
+
+                    Instant instant = Instant.parse(dtVencimento.replaceAll("\"", ""));
+                    LocalDate localDateDtVencimento = instant.atZone(ZoneId.systemDefault()).toLocalDate();
+                    despesa.setDtVencimento(localDateDtVencimento);
+
+                    despesa.setStatusPagamento(StatusPagamento.NAO);
 
                     despesa.setCriadoPor(this.retornaUsuarioLogado().getLogin());
                     despesa.setDataCriacao(Instant.now());
@@ -792,9 +823,11 @@ public class DespesaService {
             throw new RuntimeException("Não foi possível obter as transações do cartão de crédito do arquivo OFX.");
         }
 
-        validaExistenciaDespesaImportadaNoBanco(despesaList);
+        validaExistenciaDespesaImportacao(despesaList);
 
         despesaRepository.saveAllAndFlush(despesaList);
+
+        setDespesaUsuarioImportacao(despesaList);
 
         return "Arquivo OFX Importado com sucesso!";
     }

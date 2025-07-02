@@ -60,9 +60,10 @@ public class DespesaController {
     public ResponseEntity<Map<String, String>> importarDadosCartaoCredito(
             @RequestParam("file") MultipartFile file,
             @RequestParam("competencia") String competencia,
-            @RequestParam("bancoCodigo") String bancoCodigo) throws IOException, OFXParseException {
+            @RequestParam("bancoCodigo") String bancoCodigo,
+            @RequestParam("dtVencimento") String dtVencimento) throws IOException, OFXParseException {
 
-        String mensagem = despesaService.importarDadosCartaoCredito(file, competencia, bancoCodigo);
+        String mensagem = despesaService.importarDadosCartaoCredito(file, competencia, bancoCodigo, dtVencimento);
 
         Map<String, String> response = new HashMap<>();
         response.put("message", mensagem);
