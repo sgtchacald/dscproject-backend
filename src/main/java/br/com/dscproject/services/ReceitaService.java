@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.Instant;
 import java.util.*;
 
@@ -143,6 +145,23 @@ public class ReceitaService {
         } catch (DataIntegrityViolationException e) {
             throw new DataIntegrityException("Não foi possível excluir este registro pois existem registros vinculados a ele.");
         }
+    }
+
+    public String buscarTotalPorCompetencia(String competencia) {
+        String loginUsuarioToken = tokenService.validarToken(tokenService.recuperarToken(request));
+        Usuario usuario = usuarioRepository.findByLogin(loginUsuarioToken);
+
+        BigDecimal total = BigDecimal.ZERO;
+
+        List<Receita> receitaList = receitaRepository.findByCompetenciaAndInstituicaoFinanceiraUsuario_UsuarioId(competencia, usuario.getId());
+
+        if(!receitaList.isEmpty()){
+            for(Receita receita : receitaList){
+                total = total.add(receita.getValor());
+            }
+        }
+
+        return NumberFormat.getCurrencyInstance().format(total).replace("R$ ", "");
     }
 }
 

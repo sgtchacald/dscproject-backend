@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.util.List;
 
@@ -19,16 +20,6 @@ public class ReceitaController {
 
     @Autowired
     ReceitaService receitaService;
-
-    @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<List<ReceitaDTO>> buscarTodos(){
-        return ResponseEntity.ok().body(receitaService.buscarTodosPorUsuario());
-    }
-
-    @RequestMapping(value="/buscar-por-id/{id}", method=RequestMethod.GET)
-    public ResponseEntity<Receita> buscarPorId(@PathVariable Long id) throws Exception {
-        return ResponseEntity.ok().body(receitaService.buscarPorId(id));
-    }
 
     @RequestMapping(value="/inserir", method = RequestMethod.POST)
     public ResponseEntity<Receita> inserir(@Valid @RequestBody ReceitaDTO data){
@@ -48,6 +39,21 @@ public class ReceitaController {
     public ResponseEntity<Void> excluir(@PathVariable Long id) throws ObjectNotFoundException{
         receitaService.excluir(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @RequestMapping(method = RequestMethod.GET)
+    public ResponseEntity<List<ReceitaDTO>> buscarTodos(){
+        return ResponseEntity.ok().body(receitaService.buscarTodosPorUsuario());
+    }
+
+    @RequestMapping(value="/buscar-por-id/{id}", method=RequestMethod.GET)
+    public ResponseEntity<Receita> buscarPorId(@PathVariable Long id) throws Exception {
+        return ResponseEntity.ok().body(receitaService.buscarPorId(id));
+    }
+
+    @RequestMapping(value="/buscar-total-por-competencia/{competencia}", method=RequestMethod.GET)
+    public ResponseEntity<String> buscarTotalPorCompetencia(@PathVariable String competencia) throws Exception {
+        return ResponseEntity.ok().body(receitaService.buscarTotalPorCompetencia(competencia));
     }
 
 }

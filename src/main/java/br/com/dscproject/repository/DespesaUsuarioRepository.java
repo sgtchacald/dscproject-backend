@@ -13,6 +13,9 @@ import java.util.Optional;
 public interface DespesaUsuarioRepository extends JpaRepository<DespesaUsuario, Long> {
 
     List<DespesaUsuario> findByDespesa(Optional<Despesa> registroFinanceiro);
+
     DespesaUsuario findByUsuarioAndDespesa(Usuario usuario, Despesa registroFinanceiro);
+
+    List<DespesaUsuario> findByUsuario_IdAndDespesa_Competencia(Long usuarioId, String despesaCompetencia);
 
 }

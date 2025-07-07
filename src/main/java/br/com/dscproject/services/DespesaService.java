@@ -1,9 +1,6 @@
 package br.com.dscproject.services;
 
-import br.com.dscproject.domain.Despesa;
-import br.com.dscproject.domain.DespesaUsuario;
-import br.com.dscproject.domain.InstituicaoFinanceiraUsuario;
-import br.com.dscproject.domain.Usuario;
+import br.com.dscproject.domain.*;
 import br.com.dscproject.dto.DespesaDTO;
 import br.com.dscproject.dto.UsuarioResponsavelDTO;
 import br.com.dscproject.dto.UsuarioResponsavelQueryDTO;
@@ -46,6 +43,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.text.NumberFormat;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -86,11 +84,8 @@ public class DespesaService {
         if(instituicaoFinanceiraUsuario == null){
             throw new RuntimeException("Não foi encontrada a instituição financeira de codigo " + bancoCodigo + " vinculada a este usuario");
         }
-
         return instituicaoFinanceiraUsuario;
     }
-
-
 
     @Transactional
     public List<DespesaDTO> buscarTodosPorUsuario() {
@@ -830,6 +825,22 @@ public class DespesaService {
         setDespesaUsuarioImportacao(despesaList);
 
         return "Arquivo OFX Importado com sucesso!";
+    }
+
+    public String buscarTotalPorCompetencia(String competencia) {
+        Usuario usuario = retornaUsuarioLogado();
+
+        BigDecimal total = BigDecimal.ZERO;
+
+        List<DespesaUsuario> despesaList = despesaUsuarioRepository.findByUsuario_IdAndDespesa_Competencia(usuario.getId(), competencia);
+
+        if(!despesaList.isEmpty()){
+            for(DespesaUsuario du : despesaList){
+                total = total.add(du.getValor());
+            }
+        }
+
+        return NumberFormat.getCurrencyInstance().format(total).replace("R$ ", "");
     }
 
 

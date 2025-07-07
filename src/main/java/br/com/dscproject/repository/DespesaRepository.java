@@ -1,6 +1,7 @@
 package br.com.dscproject.repository;
 
 import br.com.dscproject.domain.Despesa;
+import br.com.dscproject.domain.DespesaUsuario;
 import br.com.dscproject.dto.UsuarioResponsavelDTO;
 import br.com.dscproject.dto.UsuarioResponsavelQueryDTO;
 import org.springframework.data.jpa.repository.JpaRepository;

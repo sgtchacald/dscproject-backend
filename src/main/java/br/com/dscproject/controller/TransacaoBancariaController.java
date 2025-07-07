@@ -68,4 +68,9 @@ public class TransacaoBancariaController {
         return ResponseEntity.ok(response);
     }
 
+    @RequestMapping(value="/buscar-saldo-competencia/{competencia}", method=RequestMethod.GET)
+    public ResponseEntity<String> buscarTotalPorCompetencia(@PathVariable String competencia) throws Exception {
+        return ResponseEntity.ok().body(transacaoBancariaService.buscarSaldoPorCompetencia(competencia));
+    }
+
 }

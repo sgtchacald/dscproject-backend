@@ -1,14 +1,13 @@
 package br.com.dscproject.services;
 
+import br.com.dscproject.domain.DespesaUsuario;
 import br.com.dscproject.domain.InstituicaoFinanceiraUsuario;
 import br.com.dscproject.domain.TransacaoBancaria;
 import br.com.dscproject.domain.Usuario;
 import br.com.dscproject.dto.TransacaoBancariaDTO;
 import br.com.dscproject.enums.CategoriaRegistroFinanceiro;
 import br.com.dscproject.enums.TipoRegistroFinanceiro;
-import br.com.dscproject.repository.InstituicaoFinanceiraUsuarioRepository;
-import br.com.dscproject.repository.TransacaoBancariaRepository;
-import br.com.dscproject.repository.UsuarioRepository;
+import br.com.dscproject.repository.*;
 import br.com.dscproject.services.exceptions.DataIntegrityException;
 import br.com.dscproject.services.exceptions.ObjectNotFoundException;
 import com.webcohesion.ofx4j.domain.data.MessageSetType;
@@ -34,6 +33,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.text.NumberFormat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,6 +60,12 @@ public class TransacaoBancariaService {
 
     @Autowired
     private EntityManager entityManager;
+
+    @Autowired
+    private ReceitaService receitaService;
+
+    @Autowired
+    private DespesaService despesaService;
 
     public Usuario retornaUsuarioLogado(){
         String loginUsuarioToken = this.tokenService.validarToken(tokenService.recuperarToken(request));
@@ -240,6 +246,20 @@ public class TransacaoBancariaService {
         }
 
         return "Arquivo OFX Importado com sucesso!";
+    }
+
+    public String buscarSaldoPorCompetencia(String competencia) {
+
+        String totalDespesaStr = despesaService.buscarTotalPorCompetencia(competencia).replace(".", "").replace(",", ".");
+        String totalReceitaStr = receitaService.buscarTotalPorCompetencia(competencia).replace(".", "").replace(",", ".");
+
+        BigDecimal totalDespesa = new BigDecimal(totalDespesaStr);
+        BigDecimal totalReceita = new BigDecimal(totalReceitaStr);
+
+        return NumberFormat
+                .getCurrencyInstance()
+                .format(totalReceita.subtract(totalDespesa))
+                .replace("R$ ", "");
     }
 
 }

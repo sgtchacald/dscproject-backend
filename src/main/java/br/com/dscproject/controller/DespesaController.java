@@ -70,4 +70,9 @@ public class DespesaController {
         return ResponseEntity.ok(response);
     }
 
+    @RequestMapping(value="/buscar-total-por-competencia/{competencia}", method=RequestMethod.GET)
+    public ResponseEntity<String> buscarTotalPorCompetencia(@PathVariable String competencia) throws Exception {
+        return ResponseEntity.ok().body(despesaService.buscarTotalPorCompetencia(competencia));
+    }
+
 }
