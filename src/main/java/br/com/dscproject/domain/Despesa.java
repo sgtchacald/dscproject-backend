@@ -51,6 +51,9 @@ public class Despesa extends AbstractAuditoria implements Serializable {
     @Column(name = "DESP_DT_VENCIMENTO", nullable = true)
     private LocalDate dtVencimento;
 
+    @Column(name = "DESP_DT_PAGAMENTO", nullable = true)
+    private LocalDate dtPagamento;
+
     @Column(name = "DESP_EXISTE_PARCELA", nullable = false)
     private boolean existeParcela = false;
 

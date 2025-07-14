@@ -76,4 +76,10 @@ public class DespesaController {
         return ResponseEntity.ok().body(despesaService.buscarTotalPorCompetencia(competencia));
     }
 
+    @RequestMapping(value="pagar-despesas", method=RequestMethod.POST)
+    public ResponseEntity<Void> pagarDespesas(@RequestBody List<Long> idDespesaList) throws Exception {
+        despesaService.pagarDespesas(idDespesaList);
+        return ResponseEntity.noContent().build();
+    }
+
 }

@@ -33,6 +33,7 @@ import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DateUtil;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmIndexManyToAnyType;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -252,6 +253,11 @@ public class DespesaService {
         despesa.setStatusPagamento(StatusPagamento.SIM);
         despesa.setAlteradoPor(usuarioLogado.getLogin());
         despesa.setDataAlteracao(Instant.now());
+
+        if(!despesaRepository.getById(despesa.getId()).getStatusPagamento().equals(StatusPagamento.SIM)){
+            despesa.setDtPagamento(LocalDate.now());
+        }
+
     }
 
     @Transactional
@@ -849,7 +855,34 @@ public class DespesaService {
     }
 
 
+    public void pagarDespesas(List<Long> idDespesaList) {
 
+        List<Optional<Despesa>> despesaList = new ArrayList<>();
+
+        for (Long id : idDespesaList) {
+            despesaList.add(despesaRepository.findById(id));
+        }
+
+        try {
+            if(!despesaList.isEmpty()){
+                for(Optional<Despesa> d : despesaList){
+                    d.get().setStatusPagamento(StatusPagamento.SIM);
+                    d.get().setDtPagamento(LocalDate.now());
+                    d.get().setAlteradoPor(retornaUsuarioLogado().getLogin());
+                    d.get().setDataAlteracao(Instant.now());
+
+                    try {
+                        despesaRepository.save(d.get());
+                    }catch (RuntimeException e){
+                        throw new RuntimeException("Problema ao efetuar o pagamento da despesa " + d.get().getNome());
+                    }
+                }
+            }
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+
+    }
 }
 
 
