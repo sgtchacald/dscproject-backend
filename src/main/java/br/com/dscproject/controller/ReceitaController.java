@@ -1,6 +1,7 @@
 package br.com.dscproject.controller;
 
 import br.com.dscproject.domain.Receita;
+import br.com.dscproject.dto.DashboardCardSaldoDTO;
 import br.com.dscproject.dto.ReceitaDTO;
 import br.com.dscproject.services.ReceitaService;
 import br.com.dscproject.services.exceptions.ObjectNotFoundException;
@@ -52,7 +53,7 @@ public class ReceitaController {
     }
 
     @RequestMapping(value="/buscar-total-por-competencia/{competencia}", method=RequestMethod.GET)
-    public ResponseEntity<String> buscarTotalPorCompetencia(@PathVariable String competencia) throws Exception {
+    public ResponseEntity<DashboardCardSaldoDTO> buscarTotalPorCompetencia(@PathVariable String competencia) throws Exception {
         return ResponseEntity.ok().body(receitaService.buscarTotalPorCompetencia(competencia));
     }
 

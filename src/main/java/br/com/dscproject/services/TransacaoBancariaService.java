@@ -4,6 +4,7 @@ import br.com.dscproject.domain.DespesaUsuario;
 import br.com.dscproject.domain.InstituicaoFinanceiraUsuario;
 import br.com.dscproject.domain.TransacaoBancaria;
 import br.com.dscproject.domain.Usuario;
+import br.com.dscproject.dto.DashboardCardSaldoDTO;
 import br.com.dscproject.dto.TransacaoBancariaDTO;
 import br.com.dscproject.enums.CategoriaRegistroFinanceiro;
 import br.com.dscproject.enums.TipoRegistroFinanceiro;
@@ -248,18 +249,23 @@ public class TransacaoBancariaService {
         return "Arquivo OFX Importado com sucesso!";
     }
 
-    public String buscarSaldoPorCompetencia(String competencia) {
+    public DashboardCardSaldoDTO buscarSaldoPorCompetencia(String competencia) {
 
-        String totalDespesaStr = despesaService.buscarTotalPorCompetencia(competencia).replace(".", "").replace(",", ".");
-        String totalReceitaStr = receitaService.buscarTotalPorCompetencia(competencia).replace(".", "").replace(",", ".");
+        String totalDespesaStr = despesaService.buscarTotalPorCompetencia(competencia).getValor().replace(".", "").replace(",", ".");
+        String totalReceitaStr = receitaService.buscarTotalPorCompetencia(competencia).getValor().replace(".", "").replace(",", ".");
 
         BigDecimal totalDespesa = new BigDecimal(totalDespesaStr);
         BigDecimal totalReceita = new BigDecimal(totalReceitaStr);
 
-        return NumberFormat
+        String valor =  NumberFormat
                 .getCurrencyInstance()
                 .format(totalReceita.subtract(totalDespesa))
                 .replace("R$ ", "");
+
+        DashboardCardSaldoDTO dto = new DashboardCardSaldoDTO();
+        dto.setValor(valor);
+
+        return dto;
     }
 
 }

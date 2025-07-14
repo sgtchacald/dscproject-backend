@@ -3,6 +3,7 @@ package br.com.dscproject.services;
 import br.com.dscproject.domain.Receita;
 import br.com.dscproject.domain.InstituicaoFinanceiraUsuario;
 import br.com.dscproject.domain.Usuario;
+import br.com.dscproject.dto.DashboardCardSaldoDTO;
 import br.com.dscproject.dto.ReceitaDTO;
 import br.com.dscproject.repository.*;
 import br.com.dscproject.services.exceptions.DataIntegrityException;
@@ -147,7 +148,7 @@ public class ReceitaService {
         }
     }
 
-    public String buscarTotalPorCompetencia(String competencia) {
+    public DashboardCardSaldoDTO buscarTotalPorCompetencia(String competencia) {
         String loginUsuarioToken = tokenService.validarToken(tokenService.recuperarToken(request));
         Usuario usuario = usuarioRepository.findByLogin(loginUsuarioToken);
 
@@ -160,8 +161,11 @@ public class ReceitaService {
                 total = total.add(receita.getValor());
             }
         }
+        DashboardCardSaldoDTO dashboardCardSaldo = new DashboardCardSaldoDTO();
 
-        return NumberFormat.getCurrencyInstance().format(total).replace("R$ ", "");
+        dashboardCardSaldo.setValor(NumberFormat.getCurrencyInstance().format(total).replace("R$ ", ""));
+
+        return dashboardCardSaldo;
     }
 }
 

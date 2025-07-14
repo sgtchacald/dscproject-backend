@@ -1,6 +1,7 @@
 package br.com.dscproject.controller;
 
 import br.com.dscproject.domain.TransacaoBancaria;
+import br.com.dscproject.dto.DashboardCardSaldoDTO;
 import br.com.dscproject.dto.TransacaoBancariaDTO;
 import br.com.dscproject.services.TransacaoBancariaService;
 import br.com.dscproject.services.exceptions.ObjectNotFoundException;
@@ -69,7 +70,7 @@ public class TransacaoBancariaController {
     }
 
     @RequestMapping(value="/buscar-saldo-competencia/{competencia}", method=RequestMethod.GET)
-    public ResponseEntity<String> buscarTotalPorCompetencia(@PathVariable String competencia) throws Exception {
+    public ResponseEntity<DashboardCardSaldoDTO> buscarTotalPorCompetencia(@PathVariable String competencia) throws Exception {
         return ResponseEntity.ok().body(transacaoBancariaService.buscarSaldoPorCompetencia(competencia));
     }
 

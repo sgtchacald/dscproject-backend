@@ -1,6 +1,7 @@
 package br.com.dscproject.services;
 
 import br.com.dscproject.domain.*;
+import br.com.dscproject.dto.DashboardCardSaldoDTO;
 import br.com.dscproject.dto.DespesaDTO;
 import br.com.dscproject.dto.UsuarioResponsavelDTO;
 import br.com.dscproject.dto.UsuarioResponsavelQueryDTO;
@@ -827,7 +828,7 @@ public class DespesaService {
         return "Arquivo OFX Importado com sucesso!";
     }
 
-    public String buscarTotalPorCompetencia(String competencia) {
+    public DashboardCardSaldoDTO buscarTotalPorCompetencia(String competencia) {
         Usuario usuario = retornaUsuarioLogado();
 
         BigDecimal total = BigDecimal.ZERO;
@@ -840,7 +841,11 @@ public class DespesaService {
             }
         }
 
-        return NumberFormat.getCurrencyInstance().format(total).replace("R$ ", "");
+        DashboardCardSaldoDTO dashboardCardSaldo = new DashboardCardSaldoDTO();
+
+        dashboardCardSaldo.setValor(NumberFormat.getCurrencyInstance().format(total).replace("R$ ", ""));
+
+        return dashboardCardSaldo;
     }
 
 
