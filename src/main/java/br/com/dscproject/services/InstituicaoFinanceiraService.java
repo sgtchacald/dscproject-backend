@@ -60,6 +60,7 @@ public class InstituicaoFinanceiraService {
 
         instituicaoFinanceiraBanco.setNome(data.getNome());
         instituicaoFinanceiraBanco.setTipoInstituicao(data.getTipoInstituicao());
+        instituicaoFinanceiraBanco.setCodigo(data.getCodigo());
 
         return instituicaoFinanceiraRepository.save(instituicaoFinanceiraBanco);
     }
