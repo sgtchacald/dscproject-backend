@@ -476,7 +476,7 @@ public class DespesaService {
 
     public Despesa setDespesaImportacao(Despesa despesa, String competencia, String bancoCodigo, String dtVencimento, HSSFCell celulaIdTransacao) {
 
-        despesa.setDescricao("");
+        despesa.setDescricao(despesa.getNome());
         despesa.setCompetencia(competencia);
         despesa.setTipoRegistroFinanceiro(TipoRegistroFinanceiro.DESPESA);
         despesa.setInstituicaoFinanceiraUsuario(retornaInstituicaoFinanceiraUsuario(bancoCodigo));
