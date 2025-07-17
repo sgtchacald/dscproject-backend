@@ -1,10 +1,7 @@
 package br.com.dscproject.services;
 
 import br.com.dscproject.domain.*;
-import br.com.dscproject.dto.DashboardCardSaldoDTO;
-import br.com.dscproject.dto.DespesaDTO;
-import br.com.dscproject.dto.UsuarioResponsavelDTO;
-import br.com.dscproject.dto.UsuarioResponsavelQueryDTO;
+import br.com.dscproject.dto.*;
 import br.com.dscproject.enums.StatusPagamento;
 import br.com.dscproject.enums.TipoRegistroFinanceiro;
 import br.com.dscproject.repository.DespesaRepository;
@@ -857,31 +854,9 @@ public class DespesaService {
 
     public void pagarDespesas(List<Long> idDespesaList) {
 
-        List<Optional<Despesa>> despesaList = new ArrayList<>();
+    }
 
-        for (Long id : idDespesaList) {
-            despesaList.add(despesaRepository.findById(id));
-        }
-
-        try {
-            if(!despesaList.isEmpty()){
-                for(Optional<Despesa> d : despesaList){
-                    d.get().setStatusPagamento(StatusPagamento.SIM);
-                    d.get().setDtPagamento(LocalDate.now());
-                    d.get().setAlteradoPor(retornaUsuarioLogado().getLogin());
-                    d.get().setDataAlteracao(Instant.now());
-
-                    try {
-                        despesaRepository.save(d.get());
-                    }catch (RuntimeException e){
-                        throw new RuntimeException("Problema ao efetuar o pagamento da despesa " + d.get().getNome());
-                    }
-                }
-            }
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e.getMessage());
-        }
-
+    public void compartilharDespesas(DespesaCompartilharDTO dto) {
     }
 }
 
