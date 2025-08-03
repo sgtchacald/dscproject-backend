@@ -1,10 +1,7 @@
 package br.com.dscproject.services;
 
 import br.com.dscproject.domain.*;
-import br.com.dscproject.dto.DashboardCardSaldoDTO;
-import br.com.dscproject.dto.DespesaDTO;
-import br.com.dscproject.dto.UsuarioResponsavelDTO;
-import br.com.dscproject.dto.UsuarioResponsavelQueryDTO;
+import br.com.dscproject.dto.*;
 import br.com.dscproject.enums.StatusPagamento;
 import br.com.dscproject.enums.TipoRegistroFinanceiro;
 import br.com.dscproject.repository.DespesaRepository;
@@ -857,31 +854,83 @@ public class DespesaService {
 
     public void pagarDespesas(List<Long> idDespesaList) {
 
-        List<Optional<Despesa>> despesaList = new ArrayList<>();
+    }
 
-        for (Long id : idDespesaList) {
-            despesaList.add(despesaRepository.findById(id));
+    public void compartilharDespesas(DespesaCompartilharDTO dto) {
+
+        List<Despesa> despesasCompartilhadasList = new ArrayList<Despesa>();
+        List<Usuario> usuariosQueIraoDividirDespesaList = new ArrayList<Usuario>();
+
+        for(Long idDespesa : dto.getIdDespesaList()){
+            despesasCompartilhadasList.add(despesaRepository.findById(idDespesa).get());
         }
 
-        try {
-            if(!despesaList.isEmpty()){
-                for(Optional<Despesa> d : despesaList){
-                    d.get().setStatusPagamento(StatusPagamento.SIM);
-                    d.get().setDtPagamento(LocalDate.now());
-                    d.get().setAlteradoPor(retornaUsuarioLogado().getLogin());
-                    d.get().setDataAlteracao(Instant.now());
+        for(Long idUsuario: dto.getIdusuariosACompartilharList()){
+            usuariosQueIraoDividirDespesaList.add(usuarioRepository.findById(idUsuario).get());
+        }
 
-                    try {
-                        despesaRepository.save(d.get());
-                    }catch (RuntimeException e){
-                        throw new RuntimeException("Problema ao efetuar o pagamento da despesa " + d.get().getNome());
+        if(despesasCompartilhadasList.isEmpty() ||usuariosQueIraoDividirDespesaList.isEmpty()){
+            throw new RuntimeException("Usuários ou despesas não selecionadas, por favor selecione pelo menos um de cada para compartilhar despesas!");
+        }
+
+        for(Despesa despesa: despesasCompartilhadasList) {
+            List<DespesaUsuario> despesaUsuarioList = new ArrayList<>();
+            for (Usuario usuario : usuariosQueIraoDividirDespesaList) {
+                DespesaUsuario du = despesaUsuarioRepository.findByUsuarioAndDespesa(usuario, despesa);
+
+                DespesaUsuario despesaUsuario = new DespesaUsuario();
+                despesaUsuario.setId((du != null) ? du.getId() : null);
+                despesaUsuario.setDespesa(despesa);
+                despesaUsuario.setUsuario(usuario);
+                despesaUsuario.setValor(usuario.getValorDividido());
+                despesaUsuario.setCriadoPor(this.retornaUsuarioLogado().getLogin());
+
+                if (despesaUsuario.getId() == null) {
+                    despesaUsuarioRepository.saveAndFlush(despesaUsuario);
+                }
+
+                despesaUsuarioList.add(despesaUsuario);
+            }
+
+            List<DespesaUsuario> registrosFinanceirosUsuarioBancoList = new ArrayList<>();
+            registrosFinanceirosUsuarioBancoList = despesaUsuarioRepository.findByDespesa(Optional.of(despesa));
+            List<DespesaUsuario> despesaUsuarioAExcluir = new ArrayList<>();
+
+            for (DespesaUsuario despesaUsuarioBanco : registrosFinanceirosUsuarioBancoList) {
+                boolean existeNaTela = false;
+
+                for (DespesaUsuario despesaTela : despesaUsuarioList) {
+                    if (despesaTela.getDespesa() != null && despesaUsuarioBanco.getId() != null) {
+                        if (despesaTela.getId().equals(despesaUsuarioBanco.getId())) {
+                            existeNaTela = true;
+                            break; // Sai do loop se encontrar o ID
+                        }
+                    }
+                }
+
+                if (!existeNaTela) {
+                    despesaUsuarioAExcluir.add(despesaUsuarioBanco);
+                }
+            }
+
+            //Por fim, gravo a despesa
+            despesaRepository.saveAndFlush(despesa);
+
+            HashSet<DespesaUsuario> despesaUsuarioSet = new HashSet<>(despesaUsuarioList);
+
+
+            // Agora você pode salvar os objetos que precisam ser salvos
+            despesaUsuarioRepository.saveAllAndFlush(despesaUsuarioSet);
+
+            // E excluir os objetos que precisam ser excluídos
+            if(!despesaUsuarioAExcluir.isEmpty()){
+                for (DespesaUsuario du : despesaUsuarioAExcluir){
+                    if(du.getDespesa().getId() != null && du.getUsuario().getId() != null && du.getId() != null){
+                        despesaUsuarioRepository.deleteById(du.getId());
                     }
                 }
             }
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e.getMessage());
         }
-
     }
 }
 

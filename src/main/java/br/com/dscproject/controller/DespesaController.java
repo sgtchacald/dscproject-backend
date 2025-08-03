@@ -2,6 +2,7 @@ package br.com.dscproject.controller;
 
 import br.com.dscproject.domain.Despesa;
 import br.com.dscproject.dto.DashboardCardSaldoDTO;
+import br.com.dscproject.dto.DespesaCompartilharDTO;
 import br.com.dscproject.dto.DespesaDTO;
 import br.com.dscproject.services.DespesaService;
 import br.com.dscproject.services.exceptions.ObjectNotFoundException;
@@ -79,6 +80,12 @@ public class DespesaController {
     @RequestMapping(value="pagar-despesas", method=RequestMethod.POST)
     public ResponseEntity<Void> pagarDespesas(@RequestBody List<Long> idDespesaList) throws Exception {
         despesaService.pagarDespesas(idDespesaList);
+        return ResponseEntity.noContent().build();
+    }
+
+    @RequestMapping(value="compartilhar-despesas", method=RequestMethod.POST)
+    public ResponseEntity<Void> compartilhrDespesas(@RequestBody DespesaCompartilharDTO dto) throws Exception {
+        despesaService.compartilharDespesas(dto);
         return ResponseEntity.noContent().build();
     }
 
