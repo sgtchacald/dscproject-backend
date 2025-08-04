@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.time.Instant;
@@ -881,7 +882,17 @@ public class DespesaService {
                 despesaUsuario.setId((du != null) ? du.getId() : null);
                 despesaUsuario.setDespesa(despesa);
                 despesaUsuario.setUsuario(usuario);
-                despesaUsuario.setValor(usuario.getValorDividido());
+
+                BigDecimal valorDividido = BigDecimal.ZERO;
+                BigDecimal valorDespesa = despesa.getValor();
+                BigDecimal divisor = BigDecimal.valueOf(usuariosQueIraoDividirDespesaList.size());
+
+                if(valorDespesa != null && divisor != null){
+                    valorDividido = valorDividido.add(valorDespesa.divide(divisor, 2,  BigDecimal.ROUND_HALF_UP));
+                }
+
+                despesaUsuario.setValor(valorDividido);
+
                 despesaUsuario.setCriadoPor(this.retornaUsuarioLogado().getLogin());
 
                 if (despesaUsuario.getId() == null) {
