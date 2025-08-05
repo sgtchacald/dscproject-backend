@@ -12,9 +12,9 @@ import java.util.Optional;
 @Repository
 public interface DespesaUsuarioRepository extends JpaRepository<DespesaUsuario, Long> {
 
-    List<DespesaUsuario> findByDespesa(Optional<Despesa> registroFinanceiro);
+    List<DespesaUsuario> findByDespesa(Optional<Despesa> despesa);
 
-    DespesaUsuario findByUsuarioAndDespesa(Usuario usuario, Despesa registroFinanceiro);
+    DespesaUsuario findByUsuarioAndDespesa(Usuario usuario, Despesa despesa);
 
     List<DespesaUsuario> findByUsuario_IdAndDespesa_Competencia(Long usuarioId, String despesaCompetencia);
 

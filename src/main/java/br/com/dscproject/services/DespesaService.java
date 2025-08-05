@@ -854,6 +854,40 @@ public class DespesaService {
 
     public void pagarDespesas(List<Long> idDespesaList) {
 
+        List<Optional<Despesa>> despesaList = new ArrayList<>();
+
+        for (Long id : idDespesaList) {
+            despesaList.add(despesaRepository.findById(id));
+        }
+
+        try {
+            if(!despesaList.isEmpty()){
+                for(Optional<Despesa> d : despesaList){
+                    d.get().setStatusPagamento(StatusPagamento.SIM);
+                    d.get().setDtPagamento(LocalDate.now());
+                    d.get().setAlteradoPor(retornaUsuarioLogado().getLogin());
+                    d.get().setDataAlteracao(Instant.now());
+
+                    List<DespesaUsuario> despesaUsuarioList = despesaUsuarioRepository.findByDespesa(d);
+
+                    try {
+
+                        for(DespesaUsuario du : despesaUsuarioList){
+                            du.setStatusPagamento(true);
+                            despesaUsuarioRepository.save(du);
+                        }
+
+                        despesaRepository.save(d.get());
+
+                    }catch (RuntimeException e){
+                        throw new RuntimeException("Problema ao efetuar o pagamento da despesa " + d.get().getNome());
+                    }
+                }
+            }
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+
     }
 
     public void compartilharDespesas(DespesaCompartilharDTO dto) {
