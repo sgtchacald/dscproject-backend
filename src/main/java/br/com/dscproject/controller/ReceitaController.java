@@ -1,7 +1,7 @@
 package br.com.dscproject.controller;
 
 import br.com.dscproject.domain.Receita;
-import br.com.dscproject.dto.DashboardCardSaldoDTO;
+import br.com.dscproject.dto.dashboard.DashboardCardSaldoDTO;
 import br.com.dscproject.dto.ReceitaDTO;
 import br.com.dscproject.services.ReceitaService;
 import br.com.dscproject.services.exceptions.ObjectNotFoundException;
@@ -11,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.math.BigDecimal;
 import java.net.URI;
 import java.util.List;
 

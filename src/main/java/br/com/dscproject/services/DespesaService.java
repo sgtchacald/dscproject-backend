@@ -2,6 +2,8 @@ package br.com.dscproject.services;
 
 import br.com.dscproject.domain.*;
 import br.com.dscproject.dto.*;
+import br.com.dscproject.dto.dashboard.DashCardDespesaPorCategoriaDTO;
+import br.com.dscproject.dto.dashboard.DashboardCardSaldoDTO;
 import br.com.dscproject.enums.StatusPagamento;
 import br.com.dscproject.enums.TipoRegistroFinanceiro;
 import br.com.dscproject.repository.DespesaRepository;
@@ -40,8 +42,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -836,20 +838,28 @@ public class DespesaService {
 
         BigDecimal total = BigDecimal.ZERO;
 
-        List<DespesaUsuario> despesaList = despesaUsuarioRepository.findByUsuario_IdAndDespesa_Competencia(usuario.getId(), competencia);
+        List<DespesaUsuario> despesaList = despesaUsuarioRepository
+                .findByUsuario_IdAndDespesa_Competencia(usuario.getId(), competencia);
 
-        if(!despesaList.isEmpty()){
-            for(DespesaUsuario du : despesaList){
-                total = total.add(du.getValor());
+        if (!despesaList.isEmpty()) {
+            for (DespesaUsuario du : despesaList) {
+                if (du.getValor() != null) {
+                    total = total.add(du.getValor());
+                }
             }
         }
 
-        DashboardCardSaldoDTO dashboardCardSaldo = new DashboardCardSaldoDTO();
+        // Formata no padrão brasileiro sem símbolo de moeda
+        DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getNumberInstance(new Locale("pt", "BR"));
+        decimalFormat.applyPattern("#,##0.00");
+        String valorFormatado = decimalFormat.format(total);
 
-        dashboardCardSaldo.setValor(NumberFormat.getCurrencyInstance().format(total).replace("R$ ", ""));
+        DashboardCardSaldoDTO dashboardCardSaldo = new DashboardCardSaldoDTO();
+        dashboardCardSaldo.setValor(valorFormatado);
 
         return dashboardCardSaldo;
     }
+
 
 
     public void pagarDespesas(List<Long> idDespesaList) {
@@ -975,6 +985,14 @@ public class DespesaService {
                 }
             }
         }
+    }
+
+    public DashCardDespesaPorCategoriaDTO buscarPercentualDespesaPorCategoria(String competencia) {
+        Usuario usuario = retornaUsuarioLogado();
+
+        List<DashCardDespesaPorCategoriaDTO> dashDTO = despesaRepository.findDespesasByUsuarioIdAndCompetencia(usuario.getId(), competencia);
+
+        return null;
     }
 }
 

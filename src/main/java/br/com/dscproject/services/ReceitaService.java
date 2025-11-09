@@ -3,7 +3,7 @@ package br.com.dscproject.services;
 import br.com.dscproject.domain.Receita;
 import br.com.dscproject.domain.InstituicaoFinanceiraUsuario;
 import br.com.dscproject.domain.Usuario;
-import br.com.dscproject.dto.DashboardCardSaldoDTO;
+import br.com.dscproject.dto.dashboard.DashboardCardSaldoDTO;
 import br.com.dscproject.dto.ReceitaDTO;
 import br.com.dscproject.repository.*;
 import br.com.dscproject.services.exceptions.DataIntegrityException;
@@ -18,6 +18,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.time.Instant;
 import java.util.*;
@@ -154,18 +155,28 @@ public class ReceitaService {
 
         BigDecimal total = BigDecimal.ZERO;
 
-        List<Receita> receitaList = receitaRepository.findByCompetenciaAndInstituicaoFinanceiraUsuario_UsuarioId(competencia, usuario.getId());
+        List<Receita> receitaList = receitaRepository
+                .findByCompetenciaAndInstituicaoFinanceiraUsuario_UsuarioId(competencia, usuario.getId());
 
-        if(!receitaList.isEmpty()){
-            for(Receita receita : receitaList){
-                total = total.add(receita.getValor());
+        if (!receitaList.isEmpty()) {
+            for (Receita receita : receitaList) {
+                if (receita.getValor() != null) {
+                    total = total.add(receita.getValor());
+                }
             }
         }
-        DashboardCardSaldoDTO dashboardCardSaldo = new DashboardCardSaldoDTO();
 
-        dashboardCardSaldo.setValor(NumberFormat.getCurrencyInstance().format(total).replace("R$ ", ""));
+        // Formata no padrão brasileiro sem símbolo de moeda
+        DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getNumberInstance(new Locale("pt", "BR"));
+        decimalFormat.applyPattern("#,##0.00");
+        String valorFormatado = decimalFormat.format(total);
+
+        DashboardCardSaldoDTO dashboardCardSaldo = new DashboardCardSaldoDTO();
+        dashboardCardSaldo.setValor(valorFormatado);
 
         return dashboardCardSaldo;
     }
+
+
 }
 

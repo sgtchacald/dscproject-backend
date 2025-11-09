@@ -4,6 +4,7 @@ import br.com.dscproject.domain.Despesa;
 import br.com.dscproject.domain.DespesaUsuario;
 import br.com.dscproject.dto.UsuarioResponsavelDTO;
 import br.com.dscproject.dto.UsuarioResponsavelQueryDTO;
+import br.com.dscproject.dto.dashboard.DashCardDespesaPorCategoriaDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -29,6 +30,17 @@ public interface DespesaRepository extends JpaRepository<Despesa, Long> {
             "JOIN DespesaUsuario du ON d.id = du.despesa.id " +
             "WHERE du.usuario.id = :usuarioId ")
     List<Despesa> findDespesasByUsuarioId(@Param("usuarioId") Long usuarioId);
+
+    // Consulta JPQL com INNER JOIN entre Despesa, DespesaUsuario e Usuario
+    @Query(
+        "SELECT new br.com.dscproject.dto.dashboard.DashCardDespesaPorCategoriaDTO(d.categoriaRegistroFinanceiro, count(d.id)) " +
+        "FROM Despesa d " +
+        "JOIN DespesaUsuario du ON d.id = du.despesa.id " +
+        "WHERE du.usuario.id = :usuarioId " +
+        "AND d.competencia = :competencia " +
+        "GROUP BY nome"
+    )
+    List<DashCardDespesaPorCategoriaDTO> findDespesasByUsuarioIdAndCompetencia(@Param("usuarioId") Long usuarioId, @Param("competencia") String competencia);
 
     List<Despesa> findByCompetenciaAndNomeAndDescricaoAndDtLancamentoAndTransacaoIdAndInstituicaoFinanceiraUsuario_Id(String competencia, String nome, String descricao, LocalDate dtLancamento, String transacaoId, Long instituicaoFinanceiraUsuario_id );
 

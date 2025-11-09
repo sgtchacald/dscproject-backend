@@ -1,7 +1,7 @@
 package br.com.dscproject.controller;
 
 import br.com.dscproject.domain.TransacaoBancaria;
-import br.com.dscproject.dto.DashboardCardSaldoDTO;
+import br.com.dscproject.dto.dashboard.DashboardCardSaldoDTO;
 import br.com.dscproject.dto.TransacaoBancariaDTO;
 import br.com.dscproject.services.TransacaoBancariaService;
 import br.com.dscproject.services.exceptions.ObjectNotFoundException;

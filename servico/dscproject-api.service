@@ -1,0 +1,15 @@
+[Unit]
+Description=DSCPROJECT Spring Boot Application
+After=network.target
+
+[Service]
+User=root
+ExecStart=/usr/bin/java -jar /sistemas/dscproject/api/dscproject-0.0.1-SNAPSHOT.jar
+SuccessExitStatus=143
+Restart=always
+RestartSec=10
+StandardOutput=file:/sistemas/dscproject/log/dscproject.log
+StandardError=file:/sistemas/dscproject/log/dscproject-error.log
+
+[Install]
+WantedBy=multi-user.target

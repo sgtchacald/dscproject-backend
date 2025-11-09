@@ -1,7 +1,8 @@
 package br.com.dscproject.controller;
 
 import br.com.dscproject.domain.Despesa;
-import br.com.dscproject.dto.DashboardCardSaldoDTO;
+import br.com.dscproject.dto.dashboard.DashCardDespesaPorCategoriaDTO;
+import br.com.dscproject.dto.dashboard.DashboardCardSaldoDTO;
 import br.com.dscproject.dto.DespesaCompartilharDTO;
 import br.com.dscproject.dto.DespesaDTO;
 import br.com.dscproject.services.DespesaService;
@@ -87,6 +88,11 @@ public class DespesaController {
     public ResponseEntity<Void> compartilhrDespesas(@RequestBody DespesaCompartilharDTO dto) throws Exception {
         despesaService.compartilharDespesas(dto);
         return ResponseEntity.noContent().build();
+    }
+
+    @RequestMapping(value="/dashboard/despesas-por-categoria/{competencia}", method=RequestMethod.GET)
+    public ResponseEntity<DashCardDespesaPorCategoriaDTO> buscarPercentualDespesaPorCategoria(@PathVariable String competencia) throws Exception {
+        return ResponseEntity.ok().body(despesaService.buscarPercentualDespesaPorCategoria(competencia));
     }
 
 }

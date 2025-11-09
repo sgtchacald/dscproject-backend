@@ -1,10 +1,9 @@
 package br.com.dscproject.services;
 
-import br.com.dscproject.domain.DespesaUsuario;
 import br.com.dscproject.domain.InstituicaoFinanceiraUsuario;
 import br.com.dscproject.domain.TransacaoBancaria;
 import br.com.dscproject.domain.Usuario;
-import br.com.dscproject.dto.DashboardCardSaldoDTO;
+import br.com.dscproject.dto.dashboard.DashboardCardSaldoDTO;
 import br.com.dscproject.dto.TransacaoBancariaDTO;
 import br.com.dscproject.enums.CategoriaRegistroFinanceiro;
 import br.com.dscproject.enums.TipoRegistroFinanceiro;
@@ -30,14 +29,15 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -251,21 +251,32 @@ public class TransacaoBancariaService {
 
     public DashboardCardSaldoDTO buscarSaldoPorCompetencia(String competencia) {
 
-        String totalDespesaStr = despesaService.buscarTotalPorCompetencia(competencia).getValor().replace(".", "").replace(",", ".");
-        String totalReceitaStr = receitaService.buscarTotalPorCompetencia(competencia).getValor().replace(".", "").replace(",", ".");
+        // Recupera e converte para BigDecimal
+        String totalDespesaStr = despesaService.buscarTotalPorCompetencia(competencia)
+                .getValor()
+                .replace(".", "")
+                .replace(",", ".");
+        String totalReceitaStr = receitaService.buscarTotalPorCompetencia(competencia)
+                .getValor()
+                .replace(".", "")
+                .replace(",", ".");
 
         BigDecimal totalDespesa = new BigDecimal(totalDespesaStr);
         BigDecimal totalReceita = new BigDecimal(totalReceitaStr);
 
-        String valor =  NumberFormat
-                .getCurrencyInstance()
-                .format(totalReceita.subtract(totalDespesa))
-                .replace("R$ ", "");
+        // Calcula saldo
+        BigDecimal saldo = totalReceita.subtract(totalDespesa);
+
+        // Formata no padrão brasileiro (milhar = ".", decimal = ",") sem símbolo de moeda
+        DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getNumberInstance(new Locale("pt", "BR"));
+        decimalFormat.applyPattern("#,##0.00");
+        String valorFormatado = decimalFormat.format(saldo);
 
         DashboardCardSaldoDTO dto = new DashboardCardSaldoDTO();
-        dto.setValor(valor);
+        dto.setValor(valorFormatado);
 
         return dto;
     }
+
 
 }
