@@ -24,6 +24,7 @@ public enum CategoriaRegistroFinanceiro {
     EMPRESTIMOS("EMPRESTIMOS", "Empréstimos"),
     CARTAO_DE_CREDITO("CARTAO_DE_CREDITO", "Cartão de Crédito"),
     TAXAS_EMPRESA("TAXAS_EMPRESA", "Taxas PJ"),
+    EMPRESA("EMPRESA", "Empresa"),
     OUTRO("OUTRO", "Outro");
 
     @Getter
